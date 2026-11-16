@@ -1,0 +1,703 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Pillar 0: Global Safety Net (Default-Deny Catch-All)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ------------------------------------------------------------------
+    // Global Hardened Helpers
+    // ------------------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function uid() {
+      return request.auth.uid;
+    }
+
+    function isOwner(userId) {
+      return isVerified() && uid() == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCompositeId(id) {
+      return id is string && id.size() >= 3 && id.size() <= 260 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isBlockedPair(a, b) {
+      return exists(/databases/$(database)/documents/blocks/$(a + '_' + b))
+          || exists(/databases/$(database)/documents/blocks/$(b + '_' + a));
+    }
+
+    // ------------------------------------------------------------------
+    // Entity Validation Blueprints (Anti-Update-Gap)
+    // ------------------------------------------------------------------
+    function isValidProfile(data) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'age', 'gender', 'interestedIn', 'bio',
+        'jobTitle', 'city', 'interests', 'photos', 'approxLat', 'approxLng',
+        'isOnboarded', 'isVisible', 'isBanned', 'isDeleted',
+        'lastActiveAt', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'uid', 'displayName', 'age', 'gender', 'interestedIn', 'bio',
+        'jobTitle', 'city', 'interests', 'photos', 'approxLat', 'approxLng',
+        'isOnboarded', 'isVisible', 'isBanned', 'isDeleted',
+        'lastActiveAt', 'createdAt', 'updatedAt',
+        'connectionGoal', 'storySparks',
+        'isProfileVerified', 'isSelfieVerified', 'securityCheckPending',
+        'photoVerificationRequired', 'lastVerifiedAt'
+      ])
+      && isValidId(data.uid)
+      && data.uid == uid()
+      && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 40
+      && data.age is int && data.age >= 18 && data.age <= 99
+      && data.gender in ['woman', 'man', 'non_binary', 'other']
+      && data.interestedIn is list
+      && data.interestedIn.size() >= 1 && data.interestedIn.size() <= 4
+      && data.interestedIn.hasOnly(['woman', 'man', 'non_binary', 'other'])
+      && data.bio is string && data.bio.size() <= 500
+      && data.jobTitle is string && data.jobTitle.size() <= 80
+      && data.city is string && data.city.size() <= 80
+      && data.interests is list && data.interests.size() <= 12
+      && (data.interests.size() == 0 || (data.interests[0] is string && data.interests[0].size() <= 40))
+      && data.photos is list && data.photos.size() >= 1 && data.photos.size() <= 6
+      && data.photos[0] is string && data.photos[0].size() >= 1 && data.photos[0].size() <= 45000
+      && (data.photos.size() < 2 || (data.photos[1] is string && data.photos[1].size() >= 1 && data.photos[1].size() <= 45000))
+      && (data.photos.size() < 3 || (data.photos[2] is string && data.photos[2].size() >= 1 && data.photos[2].size() <= 45000))
+      && (data.photos.size() < 4 || (data.photos[3] is string && data.photos[3].size() >= 1 && data.photos[3].size() <= 45000))
+      && (data.photos.size() < 5 || (data.photos[4] is string && data.photos[4].size() >= 1 && data.photos[4].size() <= 45000))
+      && (data.photos.size() < 6 || (data.photos[5] is string && data.photos[5].size() >= 1 && data.photos[5].size() <= 45000))
+      && data.approxLat is number && data.approxLat >= -90 && data.approxLat <= 90
+      && data.approxLng is number && data.approxLng >= -180 && data.approxLng <= 180
+      && data.isOnboarded is bool
+      && data.isVisible is bool
+      && data.isBanned == false
+      && data.isDeleted is bool
+      && (data.isVisible == false || (data.isOnboarded == true && data.isBanned == false && data.isDeleted == false))
+      && data.lastActiveAt is timestamp
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp
+      && (!('connectionGoal' in data) || (
+        data.connectionGoal is string &&
+        data.connectionGoal in ['Long-term partner', 'Intentional dating', 'Taking it slow', 'Still exploring']
+      ))
+      && (!('storySparks' in data) || (
+        data.storySparks is list &&
+        data.storySparks.size() <= 3 &&
+        (data.storySparks.size() == 0 || (
+          data.storySparks[0] is map &&
+          data.storySparks[0].keys().hasAll(['question', 'answer']) &&
+          data.storySparks[0].keys().hasOnly(['question', 'answer']) &&
+          data.storySparks[0].question is string && data.storySparks[0].question.size() <= 100 &&
+          data.storySparks[0].answer is string && data.storySparks[0].answer.size() <= 200
+        ))
+      ))
+      && (!('isProfileVerified' in data) || data.isProfileVerified is bool)
+      && (!('isSelfieVerified' in data) || data.isSelfieVerified is bool)
+      && (!('securityCheckPending' in data) || data.securityCheckPending is bool)
+      && (!('photoVerificationRequired' in data) || data.photoVerificationRequired is bool)
+      && (!('lastVerifiedAt' in data) || data.lastVerifiedAt is timestamp);
+    }
+
+    function isValidPrivateAccount(data) {
+      return data.keys().hasAll([
+        'uid', 'email', 'dob', 'minAge', 'maxAge', 'maxDistanceKm', 'showMe', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'uid', 'email', 'dob', 'minAge', 'maxAge', 'maxDistanceKm', 'showMe', 'createdAt', 'updatedAt',
+        'strictAgeBoundary', 'strictDistanceBoundary',
+        'verificationDocType', 'verificationLast4', 'verificationFullName',
+        'firstVerifiedAt', 'lastSecurityCheckAt', 'chatsSinceSecurityCheck',
+        'preferredInterests'
+      ])
+      && isValidId(data.uid)
+      && data.uid == uid()
+      && data.email is string && data.email.size() >= 3 && data.email.size() <= 200
+      && data.dob is string && data.dob.size() == 10 && data.dob.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+      && data.minAge is int && data.minAge >= 18 && data.minAge <= 99
+      && data.maxAge is int && data.maxAge >= data.minAge && data.maxAge <= 99
+      && data.maxDistanceKm is int && data.maxDistanceKm >= 5 && data.maxDistanceKm <= 500
+      && data.showMe is bool
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp
+      && (!('strictAgeBoundary' in data) || data.strictAgeBoundary is bool)
+      && (!('strictDistanceBoundary' in data) || data.strictDistanceBoundary is bool)
+      && (!('verificationDocType' in data) || data.verificationDocType in ['passport', 'national_id', 'drivers_license'])
+      && (!('verificationLast4' in data) || (
+        data.verificationLast4 is string &&
+        data.verificationLast4.size() == 4 &&
+        data.verificationLast4.matches('^[a-zA-Z0-9]{4}$')
+      ))
+      && (!('verificationFullName' in data) || (
+        data.verificationFullName is string &&
+        data.verificationFullName.size() >= 2 &&
+        data.verificationFullName.size() <= 80
+      ))
+      && (!('firstVerifiedAt' in data) || data.firstVerifiedAt is timestamp)
+      && (!('lastSecurityCheckAt' in data) || data.lastSecurityCheckAt is timestamp)
+      && (!('chatsSinceSecurityCheck' in data) || (data.chatsSinceSecurityCheck is int && data.chatsSinceSecurityCheck >= 0 && data.chatsSinceSecurityCheck <= 100000))
+      && (!('preferredInterests' in data) || (
+        data.preferredInterests is list &&
+        data.preferredInterests.size() <= 16 &&
+        (data.preferredInterests.size() == 0 || (data.preferredInterests[0] is string && data.preferredInterests[0].size() <= 40))
+      ));
+    }
+
+    function isValidDemoMatch(data) {
+      return data.keys().hasAll([
+        'ownerId', 'demoId', 'profileName', 'profileAge', 'profileCity',
+        'profileJobTitle', 'profilePhoto', 'compatibilityScore', 'matchReasons',
+        'messages', 'isActive', 'createdAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'ownerId', 'demoId', 'profileName', 'profileAge', 'profileCity',
+        'profileJobTitle', 'profilePhoto', 'compatibilityScore', 'matchReasons',
+        'messages', 'isActive', 'createdAt', 'updatedAt'
+      ])
+      && isValidId(data.ownerId)
+      && data.ownerId == uid()
+      && isValidId(data.demoId)
+      && data.demoId.matches('^demo_[a-z0-9_]+$')
+      && data.profileName is string && data.profileName.size() >= 1 && data.profileName.size() <= 40
+      && data.profileAge is int && data.profileAge >= 18 && data.profileAge <= 99
+      && data.profileCity is string && data.profileCity.size() <= 80
+      && data.profileJobTitle is string && data.profileJobTitle.size() <= 80
+      && data.profilePhoto is string && data.profilePhoto.size() >= 1 && data.profilePhoto.size() <= 45000
+      && data.compatibilityScore is number && data.compatibilityScore >= 0 && data.compatibilityScore <= 100
+      && data.matchReasons is list && data.matchReasons.size() <= 6
+      && (data.matchReasons.size() == 0 || (data.matchReasons[0] is string && data.matchReasons[0].size() <= 120))
+      && data.messages is list && data.messages.size() <= 100
+      && (data.messages.size() == 0 || data.messages[0] is map)
+      && data.isActive is bool
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidSwipe(data) {
+      return data.keys().hasAll(['actorId', 'targetId', 'action', 'createdAt'])
+      && data.keys().hasOnly(['actorId', 'targetId', 'action', 'createdAt', 'note'])
+      && isValidId(data.actorId)
+      && isValidId(data.targetId)
+      && data.actorId == uid()
+      && data.targetId != uid()
+      && data.action in ['like', 'pass', 'superlike']
+      && data.createdAt is timestamp
+      && (!('note' in data) || (data.note is string && data.note.size() <= 240));
+    }
+
+    function isValidParticipantSummary(summary, expectedUid) {
+      return summary is map
+      && summary.keys().hasAll(['uid', 'displayName', 'age', 'photo', 'city', 'jobTitle'])
+      && summary.keys().hasOnly(['uid', 'displayName', 'age', 'photo', 'city', 'jobTitle'])
+      && summary.uid == expectedUid
+      && summary.displayName is string && summary.displayName.size() >= 1 && summary.displayName.size() <= 40
+      && summary.age is int && summary.age >= 18 && summary.age <= 99
+      && summary.photo is string && summary.photo.size() >= 1 && summary.photo.size() <= 45000
+      && summary.city is string && summary.city.size() <= 80
+      && summary.jobTitle is string && summary.jobTitle.size() <= 80;
+    }
+
+    function isValidMatch(data) {
+      return data.keys().hasAll([
+        'userLow', 'userHigh', 'participants', 'participantSummaries',
+        'compatibilityScore', 'matchReasons', 'isActive', 'matchedAt', 'updatedAt'
+      ])
+      && data.keys().hasOnly([
+        'userLow', 'userHigh', 'participants', 'participantSummaries',
+        'compatibilityScore', 'matchReasons', 'isActive', 'matchedAt', 'updatedAt',
+        'lastMessageText', 'lastMessageAt', 'lastMessageSenderId', 'closedBy'
+      ])
+      && isValidId(data.userLow)
+      && isValidId(data.userHigh)
+      && data.userLow < data.userHigh
+      && data.participants is list
+      && data.participants.size() == 2
+      && data.participants.hasAll([data.userLow, data.userHigh])
+      && data.participants.hasOnly([data.userLow, data.userHigh])
+      && data.participantSummaries is map
+      && data.participantSummaries.keys().hasAll([data.userLow, data.userHigh])
+      && data.participantSummaries.keys().hasOnly([data.userLow, data.userHigh])
+      && isValidParticipantSummary(data.participantSummaries[data.userLow], data.userLow)
+      && isValidParticipantSummary(data.participantSummaries[data.userHigh], data.userHigh)
+      && data.compatibilityScore is number && data.compatibilityScore >= 0 && data.compatibilityScore <= 100
+      && data.matchReasons is list && data.matchReasons.size() <= 6
+      && (data.matchReasons.size() == 0 || (data.matchReasons[0] is string && data.matchReasons[0].size() <= 120))
+      && data.isActive is bool
+      && data.matchedAt is timestamp
+      && data.updatedAt is timestamp
+      && (!('lastMessageText' in data) || (data.lastMessageText is string && data.lastMessageText.size() <= 500))
+      && (!('lastMessageAt' in data) || data.lastMessageAt is timestamp)
+      && (!('lastMessageSenderId' in data) || isValidId(data.lastMessageSenderId))
+      && (!('closedBy' in data) || isValidId(data.closedBy));
+    }
+
+    function isValidMessage(data) {
+      return data.keys().hasAll(['matchId', 'senderId', 'recipientId', 'body', 'clientId', 'sentAt'])
+      && data.keys().hasOnly([
+        'matchId', 'senderId', 'recipientId', 'body', 'clientId', 'sentAt', 'readAt',
+        'kind', 'voiceCiphertext', 'voiceIv', 'voiceMimeType', 'voiceDurationSec'
+      ])
+      && isValidCompositeId(data.matchId)
+      && isValidId(data.senderId)
+      && isValidId(data.recipientId)
+      && data.senderId != data.recipientId
+      && data.body is string && data.body.size() >= 1 && data.body.size() <= 1500
+      && data.clientId is string && data.clientId.size() >= 4 && data.clientId.size() <= 80 && data.clientId.matches('^[a-zA-Z0-9_\\-]+$')
+      && data.sentAt is timestamp
+      && (!('readAt' in data) || data.readAt is timestamp)
+      && (!('kind' in data) || data.kind in ['text', 'voice'])
+      && (
+        (
+          (!('kind' in data) || data.kind == 'text')
+          && !('voiceCiphertext' in data)
+          && !('voiceIv' in data)
+          && !('voiceMimeType' in data)
+          && !('voiceDurationSec' in data)
+        )
+        ||
+        (
+          'kind' in data && data.kind == 'voice'
+          && 'voiceCiphertext' in data
+          && data.voiceCiphertext is string
+          && data.voiceCiphertext.size() >= 16
+          && data.voiceCiphertext.size() <= 120000
+          && 'voiceIv' in data
+          && data.voiceIv is string
+          && data.voiceIv.size() >= 12
+          && data.voiceIv.size() <= 32
+          && 'voiceMimeType' in data
+          && data.voiceMimeType is string
+          && data.voiceMimeType.size() >= 5
+          && data.voiceMimeType.size() <= 64
+          && data.voiceMimeType.matches('^audio/[a-zA-Z0-9.+;= \\-]+$')
+          && 'voiceDurationSec' in data
+          && data.voiceDurationSec is number
+          && data.voiceDurationSec >= 0.5
+          && data.voiceDurationSec <= 30
+        )
+      );
+    }
+
+    function isValidBlock(data) {
+      return data.keys().hasAll(['blockerId', 'blockedId', 'blockedName', 'createdAt'])
+      && data.keys().hasOnly(['blockerId', 'blockedId', 'blockedName', 'createdAt'])
+      && isValidId(data.blockerId)
+      && isValidId(data.blockedId)
+      && data.blockerId == uid()
+      && data.blockedId != uid()
+      && data.blockedName is string && data.blockedName.size() >= 1 && data.blockedName.size() <= 60
+      && data.createdAt is timestamp;
+    }
+
+    function isValidReport(data) {
+      return data.keys().hasAll(['reporterId', 'reportedId', 'reason', 'details', 'status', 'createdAt'])
+      && data.keys().hasOnly(['reporterId', 'reportedId', 'reason', 'details', 'status', 'createdAt'])
+      && isValidId(data.reporterId)
+      && isValidId(data.reportedId)
+      && data.reporterId == uid()
+      && data.reportedId != uid()
+      && data.reason in ['harassment', 'fake_profile', 'inappropriate_content', 'spam', 'underage', 'other']
+      && data.details is string && data.details.size() <= 1000
+      && data.status == 'open'
+      && data.createdAt is timestamp;
+    }
+
+    // ------------------------------------------------------------------
+    // 1. Public Discovery Profiles & Isolated Private Account Subcollection
+    // ------------------------------------------------------------------
+    match /profiles/{userId} {
+      allow get: if isVerified() && isValidId(userId) && (
+        userId == uid() ||
+        (
+          existing().isOnboarded == true &&
+          existing().isVisible == true &&
+          existing().isBanned == false &&
+          existing().isDeleted == false
+        )
+      );
+
+      allow list: if isVerified() && (
+        resource.data.uid == uid() ||
+        resource.data.isVisible == true
+      );
+
+      allow create: if isOwner(userId)
+        && isValidId(userId)
+        && isValidProfile(incoming())
+        && incoming().photos.size() >= 5
+        && incoming().photos.size() <= 6
+        && incoming().isDeleted == false
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time
+        && incoming().lastActiveAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isValidId(userId)
+        && isValidProfile(incoming())
+        && existing().isBanned == false
+        && existing().isDeleted == false
+        && incoming().uid == existing().uid
+        && incoming().createdAt == existing().createdAt
+        && incoming().isBanned == existing().isBanned
+        && incoming().updatedAt == request.time
+        && incoming().lastActiveAt == request.time
+        && (
+          // Action 1: Edit profile details & onboarding status (photo changes require 5-6 photos and reset Selfie + Age verification)
+          (
+            incoming().isDeleted == false &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'displayName', 'age', 'gender', 'interestedIn', 'bio',
+              'jobTitle', 'city', 'interests', 'photos', 'approxLat', 'approxLng',
+              'connectionGoal', 'storySparks',
+              'isOnboarded', 'isVisible',
+              'isProfileVerified', 'isSelfieVerified', 'securityCheckPending', 'photoVerificationRequired',
+              'lastActiveAt', 'updatedAt'
+            ]) &&
+            (!incoming().diff(existing()).affectedKeys().hasAny(['isProfileVerified']) || incoming().isProfileVerified == false) &&
+            (!incoming().diff(existing()).affectedKeys().hasAny(['isSelfieVerified']) || incoming().isSelfieVerified == false) &&
+            (!incoming().diff(existing()).affectedKeys().hasAny(['securityCheckPending']) || incoming().securityCheckPending == true) &&
+            (!incoming().diff(existing()).affectedKeys().hasAny(['photoVerificationRequired']) || incoming().photoVerificationRequired == true) &&
+            (
+              !incoming().diff(existing()).affectedKeys().hasAny(['photos']) ||
+              (
+                incoming().photos.size() >= 5 &&
+                incoming().photos.size() <= 6 &&
+                incoming().isProfileVerified == false &&
+                incoming().isSelfieVerified == false &&
+                incoming().securityCheckPending == true &&
+                incoming().photoVerificationRequired == true
+              )
+            )
+          )
+          ||
+          // Action 2: Toggle discovery visibility or refresh active timestamp
+          (
+            incoming().isDeleted == false &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'isVisible', 'lastActiveAt', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 3: Age/ID & Selfie verification completion
+          (
+            incoming().isDeleted == false &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'age', 'isProfileVerified', 'isSelfieVerified', 'securityCheckPending',
+              'photoVerificationRequired', 'lastVerifiedAt', 'lastActiveAt', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 4: Self-service account deactivation (terminal)
+          (
+            incoming().isDeleted == true &&
+            incoming().isVisible == false &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'isDeleted', 'isVisible', 'lastActiveAt', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if false;
+
+      // Isolated Private PII & Discovery Preferences
+      match /private/{docId} {
+        allow get: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'info';
+
+        allow list: if false;
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'info'
+          && isValidPrivateAccount(incoming())
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && existsAfter(/databases/$(database)/documents/profiles/$(userId));
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'info'
+          && isValidPrivateAccount(incoming())
+          && existing().uid == incoming().uid
+          && existing().email == incoming().email
+          && existing().createdAt == incoming().createdAt
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/profiles/$(userId))
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'dob', 'minAge', 'maxAge', 'maxDistanceKm', 'showMe',
+            'strictAgeBoundary', 'strictDistanceBoundary',
+            'verificationDocType', 'verificationLast4', 'verificationFullName',
+            'firstVerifiedAt', 'lastSecurityCheckAt', 'chatsSinceSecurityCheck',
+            'preferredInterests', 'updatedAt'
+          ]);
+
+        allow delete: if isOwner(userId)
+          && isValidId(userId)
+          && docId == 'info';
+      }
+
+      // Owner-scoped interactive demo matches
+      match /demoMatches/{demoId} {
+        allow get: if isOwner(userId) && isValidId(userId) && isValidId(demoId);
+        allow list: if isOwner(userId) && resource.data.ownerId == uid();
+
+        allow create: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(demoId)
+          && isValidDemoMatch(incoming())
+          && incoming().demoId == demoId
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/profiles/$(userId));
+
+        allow update: if isOwner(userId)
+          && isValidId(userId)
+          && isValidId(demoId)
+          && isValidDemoMatch(incoming())
+          && existing().isActive == true
+          && existing().ownerId == incoming().ownerId
+          && existing().demoId == incoming().demoId
+          && existing().createdAt == incoming().createdAt
+          && incoming().updatedAt == request.time
+          && exists(/databases/$(database)/documents/profiles/$(userId))
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly(['messages', 'updatedAt'])
+            || (
+              incoming().isActive == false &&
+              incoming().diff(existing()).affectedKeys().hasOnly(['isActive', 'updatedAt'])
+            )
+          );
+
+        allow delete: if isOwner(userId) && isValidId(userId) && isValidId(demoId);
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // 2. Swipes (Actor-Owned, Hidden Incoming Likes)
+    // ------------------------------------------------------------------
+    match /swipes/{swipeId} {
+      allow get: if isVerified() && isValidCompositeId(swipeId) && (
+        (
+          resource == null &&
+          swipeId.size() > uid().size() + 1 && (
+            swipeId[0 : uid().size() + 1] == uid() + '_' ||
+            swipeId[swipeId.size() - uid().size() - 1 : swipeId.size()] == '_' + uid()
+          )
+        ) ||
+        (
+          resource != null && (
+            existing().actorId == uid() ||
+            (
+              existing().targetId == uid() &&
+              exists(/databases/$(database)/documents/swipes/$(uid() + '_' + existing().actorId)) &&
+              get(/databases/$(database)/documents/swipes/$(uid() + '_' + existing().actorId)).data.action in ['like', 'superlike']
+            )
+          )
+        )
+      );
+
+      allow list: if isVerified() && resource.data.actorId == uid();
+
+      allow create: if isVerified()
+        && isValidCompositeId(swipeId)
+        && isValidSwipe(incoming())
+        && swipeId == incoming().actorId + '_' + incoming().targetId
+        && incoming().createdAt == request.time
+        && !isBlockedPair(uid(), incoming().targetId)
+        && (
+          incoming().targetId.matches('^demo_[a-z0-9_]+$') ||
+          exists(/databases/$(database)/documents/profiles/$(incoming().targetId))
+        );
+
+      allow update: if false;
+
+      // Allow swipe undo only by the actor within 3 minutes and only if no match exists
+      allow delete: if isVerified()
+        && isValidCompositeId(swipeId)
+        && existing().actorId == uid()
+        && (request.time.toMillis() - existing().createdAt.toMillis()) <= 180000
+        && !exists(/databases/$(database)/documents/matches/$(uid() + '_' + existing().targetId))
+        && !exists(/databases/$(database)/documents/matches/$(existing().targetId + '_' + uid()));
+    }
+
+    // ------------------------------------------------------------------
+    // 3. Matches & Real-Time Messages
+    // ------------------------------------------------------------------
+    match /matches/{matchId} {
+      allow get: if isVerified()
+        && isValidCompositeId(matchId)
+        && uid() in existing().participants;
+
+      allow list: if isVerified()
+        && uid() in resource.data.participants;
+
+      allow create: if isVerified()
+        && isValidCompositeId(matchId)
+        && isValidMatch(incoming())
+        && matchId == incoming().userLow + '_' + incoming().userHigh
+        && uid() in incoming().participants
+        && incoming().isActive == true
+        && incoming().matchedAt == request.time
+        && incoming().updatedAt == request.time
+        && !isBlockedPair(incoming().userLow, incoming().userHigh)
+        && existsAfter(/databases/$(database)/documents/swipes/$(incoming().userLow + '_' + incoming().userHigh))
+        && existsAfter(/databases/$(database)/documents/swipes/$(incoming().userHigh + '_' + incoming().userLow))
+        && getAfter(/databases/$(database)/documents/swipes/$(incoming().userLow + '_' + incoming().userHigh)).data.action in ['like', 'superlike']
+        && getAfter(/databases/$(database)/documents/swipes/$(incoming().userHigh + '_' + incoming().userLow)).data.action in ['like', 'superlike'];
+
+      allow update: if isVerified()
+        && isValidCompositeId(matchId)
+        && isValidMatch(incoming())
+        && uid() in existing().participants
+        && existing().isActive == true
+        && incoming().userLow == existing().userLow
+        && incoming().userHigh == existing().userHigh
+        && incoming().participants == existing().participants
+        && incoming().participantSummaries == existing().participantSummaries
+        && incoming().compatibilityScore == existing().compatibilityScore
+        && incoming().matchReasons == existing().matchReasons
+        && incoming().matchedAt == existing().matchedAt
+        && incoming().updatedAt == request.time
+        && (
+          // Action 1: Update latest message preview on active match
+          (
+            incoming().isActive == true &&
+            !isBlockedPair(existing().userLow, existing().userHigh) &&
+            incoming().lastMessageSenderId == uid() &&
+            incoming().lastMessageAt == request.time &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'lastMessageText', 'lastMessageAt', 'lastMessageSenderId', 'updatedAt'
+            ])
+          )
+          ||
+          // Action 2: Unmatch / Close conversation (terminal)
+          (
+            incoming().isActive == false &&
+            incoming().closedBy == uid() &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'isActive', 'closedBy', 'updatedAt'
+            ])
+          )
+        );
+
+      allow delete: if false;
+
+      // Messages Subcollection guarded by Parent Match Master Gate
+      match /messages/{messageId} {
+        allow get: if isVerified()
+          && isValidCompositeId(matchId)
+          && isValidId(messageId)
+          && exists(/databases/$(database)/documents/matches/$(matchId))
+          && uid() in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+
+        allow list: if isVerified()
+          && isValidCompositeId(matchId)
+          && exists(/databases/$(database)/documents/matches/$(matchId))
+          && uid() in get(/databases/$(database)/documents/matches/$(matchId)).data.participants;
+
+        allow create: if isVerified()
+          && isValidCompositeId(matchId)
+          && isValidId(messageId)
+          && isValidMessage(incoming())
+          && incoming().matchId == matchId
+          && incoming().senderId == uid()
+          && incoming().sentAt == request.time
+          && !('readAt' in incoming())
+          && existsAfter(/databases/$(database)/documents/matches/$(matchId))
+          && getAfter(/databases/$(database)/documents/matches/$(matchId)).data.isActive == true
+          && uid() in getAfter(/databases/$(database)/documents/matches/$(matchId)).data.participants
+          && incoming().recipientId in getAfter(/databases/$(database)/documents/matches/$(matchId)).data.participants
+          && !isBlockedPair(uid(), incoming().recipientId);
+
+        allow update: if isVerified()
+          && isValidCompositeId(matchId)
+          && isValidId(messageId)
+          && isValidMessage(incoming())
+          && exists(/databases/$(database)/documents/matches/$(matchId))
+          && uid() in get(/databases/$(database)/documents/matches/$(matchId)).data.participants
+          && get(/databases/$(database)/documents/matches/$(matchId)).data.isActive == true
+          && existing().recipientId == uid()
+          && incoming().matchId == existing().matchId
+          && incoming().senderId == existing().senderId
+          && incoming().recipientId == existing().recipientId
+          && incoming().body == existing().body
+          && incoming().clientId == existing().clientId
+          && incoming().sentAt == existing().sentAt
+          && incoming().readAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly(['readAt']);
+
+        allow delete: if false;
+      }
+    }
+
+    // ------------------------------------------------------------------
+    // 4. Blocks
+    // ------------------------------------------------------------------
+    match /blocks/{blockId} {
+      allow get: if isVerified()
+        && isValidCompositeId(blockId)
+        && (existing().blockerId == uid() || existing().blockedId == uid());
+
+      allow list: if isVerified() && resource.data.blockerId == uid();
+
+      allow create: if isVerified()
+        && isValidCompositeId(blockId)
+        && isValidBlock(incoming())
+        && blockId == incoming().blockerId + '_' + incoming().blockedId
+        && incoming().createdAt == request.time;
+
+      allow update: if false;
+
+      allow delete: if isVerified()
+        && isValidCompositeId(blockId)
+        && existing().blockerId == uid();
+    }
+
+    // ------------------------------------------------------------------
+    // 5. Safety Reports
+    // ------------------------------------------------------------------
+    match /reports/{reportId} {
+      allow get: if isVerified()
+        && isValidId(reportId)
+        && existing().reporterId == uid();
+
+      allow list: if isVerified() && resource.data.reporterId == uid();
+
+      allow create: if isVerified()
+        && isValidId(reportId)
+        && isValidReport(incoming())
+        && incoming().createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    // ------------------------------------------------------------------
+    // 6. Connection Health Ping
+    // ------------------------------------------------------------------
+    match /test/{docId} {
+      allow get: if docId == 'connection';
+      allow list, write: if false;
+    }
+  }
+}

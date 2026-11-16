@@ -1,0 +1,17 @@
+{
+  "name": "NearMatch",
+  "short_name": "NearMatch",
+  "description": "Warm connections, just around the corner. Location-aware dating built on real safety.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF8EC",
+  "theme_color": "#E8603A",
+  "icons": [
+    {
+      "src": "/assets/aistudio/ChatGPT_Image_Jun_29__2026__07_26_24_AM_copy_9110dafc.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,552 @@
+{
+  "entities": {
+    "PublicProfile": {
+      "title": "PublicProfile",
+      "description": "Public discovery card profile containing snapped ~300m privacy coordinates and no PII such as email or DOB.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "age": {
+          "type": "integer"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["woman", "man", "non_binary", "other"]
+        },
+        "interestedIn": {
+          "type": "array"
+        },
+        "bio": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "jobTitle": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "city": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "interests": {
+          "type": "array"
+        },
+        "photos": {
+          "type": "array"
+        },
+        "approxLat": {
+          "type": "number"
+        },
+        "approxLng": {
+          "type": "number"
+        },
+        "isOnboarded": {
+          "type": "boolean"
+        },
+        "isVisible": {
+          "type": "boolean"
+        },
+        "isBanned": {
+          "type": "boolean"
+        },
+        "isDeleted": {
+          "type": "boolean"
+        },
+        "lastActiveAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "connectionGoal": {
+          "type": "string",
+          "enum": ["Long-term partner", "Intentional dating", "Taking it slow", "Still exploring"]
+        },
+        "storySparks": {
+          "type": "array"
+        },
+        "isProfileVerified": {
+          "type": "boolean"
+        },
+        "isSelfieVerified": {
+          "type": "boolean"
+        },
+        "securityCheckPending": {
+          "type": "boolean"
+        },
+        "photoVerificationRequired": {
+          "type": "boolean"
+        },
+        "lastVerifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "age",
+        "gender",
+        "interestedIn",
+        "bio",
+        "jobTitle",
+        "city",
+        "interests",
+        "photos",
+        "approxLat",
+        "approxLng",
+        "isOnboarded",
+        "isVisible",
+        "isBanned",
+        "isDeleted",
+        "lastActiveAt",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PrivateAccount": {
+      "title": "PrivateAccount",
+      "description": "Owner-only PII and discovery preference bounds isolated from public profile discovery.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "dob": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "minAge": {
+          "type": "integer"
+        },
+        "maxAge": {
+          "type": "integer"
+        },
+        "maxDistanceKm": {
+          "type": "integer"
+        },
+        "showMe": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "strictAgeBoundary": {
+          "type": "boolean"
+        },
+        "strictDistanceBoundary": {
+          "type": "boolean"
+        },
+        "verificationDocType": {
+          "type": "string",
+          "enum": ["passport", "national_id", "drivers_license"]
+        },
+        "verificationLast4": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 4,
+          "pattern": "^[a-zA-Z0-9]{4}$"
+        },
+        "verificationFullName": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "firstVerifiedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastSecurityCheckAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "chatsSinceSecurityCheck": {
+          "type": "integer"
+        },
+        "preferredInterests": {
+          "type": "array"
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "dob",
+        "minAge",
+        "maxAge",
+        "maxDistanceKm",
+        "showMe",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Swipe": {
+      "title": "Swipe",
+      "description": "Immutable swipe record keyed by actorId_targetId.",
+      "type": "object",
+      "properties": {
+        "actorId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "targetId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "action": {
+          "type": "string",
+          "enum": ["like", "pass", "superlike"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "note": {
+          "type": "string",
+          "maxLength": 240
+        }
+      },
+      "required": ["actorId", "targetId", "action", "createdAt"]
+    },
+    "Match": {
+      "title": "Match",
+      "description": "Reciprocal match between two users keyed by ordered lowUid_highUid.",
+      "type": "object",
+      "properties": {
+        "userLow": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "userHigh": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "participants": {
+          "type": "array"
+        },
+        "participantSummaries": {
+          "type": "object"
+        },
+        "compatibilityScore": {
+          "type": "number"
+        },
+        "matchReasons": {
+          "type": "array"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "lastMessageText": {
+          "type": "string",
+          "maxLength": 500
+        },
+        "lastMessageAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastMessageSenderId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "closedBy": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "matchedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "userLow",
+        "userHigh",
+        "participants",
+        "participantSummaries",
+        "compatibilityScore",
+        "matchReasons",
+        "isActive",
+        "matchedAt",
+        "updatedAt"
+      ]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Chat message inside an active match conversation.",
+      "type": "object",
+      "properties": {
+        "matchId": {
+          "type": "string",
+          "maxLength": 260,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "senderId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "recipientId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "clientId": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 80,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "readAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["text", "voice"]
+        },
+        "voiceCiphertext": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 120000
+        },
+        "voiceIv": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 32
+        },
+        "voiceMimeType": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "voiceDurationSec": {
+          "type": "number"
+        }
+      },
+      "required": ["matchId", "senderId", "recipientId", "body", "clientId", "sentAt"]
+    },
+    "Block": {
+      "title": "Block",
+      "description": "User block record keyed by blockerId_blockedId.",
+      "type": "object",
+      "properties": {
+        "blockerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "blockedId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "blockedName": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["blockerId", "blockedId", "blockedName", "createdAt"]
+    },
+    "Report": {
+      "title": "Report",
+      "description": "Safety report submitted by a verified user.",
+      "type": "object",
+      "properties": {
+        "reporterId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reportedId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "reason": {
+          "type": "string",
+          "enum": ["harassment", "fake_profile", "inappropriate_content", "spam", "underage", "other"]
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "status": {
+          "type": "string",
+          "enum": ["open"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["reporterId", "reportedId", "reason", "details", "status", "createdAt"]
+    },
+    "DemoMatch": {
+      "title": "DemoMatch",
+      "description": "Owner-scoped curated demo match and conversation thread persisted per user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "demoId": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "profileName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "profileAge": {
+          "type": "integer"
+        },
+        "profileCity": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "profileJobTitle": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "profilePhoto": {
+          "type": "string",
+          "maxLength": 45000
+        },
+        "compatibilityScore": {
+          "type": "number"
+        },
+        "matchReasons": {
+          "type": "array"
+        },
+        "messages": {
+          "type": "array"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "ownerId",
+        "demoId",
+        "profileName",
+        "profileAge",
+        "profileCity",
+        "profileJobTitle",
+        "profilePhoto",
+        "compatibilityScore",
+        "matchReasons",
+        "messages",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ConnectionCheck": {
+      "title": "ConnectionCheck",
+      "description": "Read-only connection ping document used on boot.",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/profiles/{userId}": {
+      "schema": { "$ref": "#/entities/PublicProfile" },
+      "description": "Public discovery card profiles (snapped ~300m coordinates, zero PII)."
+    },
+    "/profiles/{userId}/private/info": {
+      "schema": { "$ref": "#/entities/PrivateAccount" },
+      "description": "Strictly owner-only PII (email, DOB) and discovery preference ranges."
+    },
+    "/profiles/{userId}/demoMatches/{demoId}": {
+      "schema": { "$ref": "#/entities/DemoMatch" },
+      "description": "Owner-scoped interactive demo matches and simulated message transcripts."
+    },
+    "/swipes/{swipeId}": {
+      "schema": { "$ref": "#/entities/Swipe" },
+      "description": "Swipe actions keyed deterministically as actorId_targetId."
+    },
+    "/matches/{matchId}": {
+      "schema": { "$ref": "#/entities/Match" },
+      "description": "Reciprocal matches keyed deterministically as lowUid_highUid."
+    },
+    "/matches/{matchId}/messages/{messageId}": {
+      "schema": { "$ref": "#/entities/Message" },
+      "description": "Real-time chat messages scoped to match participants."
+    },
+    "/blocks/{blockId}": {
+      "schema": { "$ref": "#/entities/Block" },
+      "description": "User blocks keyed deterministically as blockerId_blockedId."
+    },
+    "/reports/{reportId}": {
+      "schema": { "$ref": "#/entities/Report" },
+      "description": "User safety reports scoped strictly to the submitting user."
+    },
+    "/test/{docId}": {
+      "schema": { "$ref": "#/entities/ConnectionCheck" },
+      "description": "Public read-only boot health check document (connection)."
+    }
+  }
+}
