@@ -307,6 +307,7 @@ export function DiscoverView({
       await submitReport({
         reporterId: viewer.uid,
         reportedId: target.uid,
+        conversationId: existingConv?.id ?? 'discovery_card',
         reason: payload.reason,
         details: payload.details,
       });

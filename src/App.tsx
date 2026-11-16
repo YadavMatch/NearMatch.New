@@ -59,11 +59,7 @@ function NearMatchWorkspace() {
   if (!user) {
     return (
       <>
-        <SignInScreen
-          onSignIn={() => void signInWithGoogle()}
-          authError={authError}
-          onDismissError={clearAuthError}
-        />
+        <SignInScreen />
         <DoodleSquirrel />
         <CookieConsentFlash />
       </>

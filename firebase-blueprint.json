@@ -409,6 +409,11 @@
           "maxLength": 128,
           "pattern": "^[a-zA-Z0-9_\\-]+$"
         },
+        "conversationId": {
+          "type": "string",
+          "maxLength": 260,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
         "reason": {
           "type": "string",
           "enum": ["harassment", "fake_profile", "inappropriate_content", "spam", "underage", "other"]
@@ -426,7 +431,7 @@
           "format": "date-time"
         }
       },
-      "required": ["reporterId", "reportedId", "reason", "details", "status", "createdAt"]
+      "required": ["reporterId", "reportedId", "conversationId", "reason", "details", "status", "createdAt"]
     },
     "DemoMatch": {
       "title": "DemoMatch",

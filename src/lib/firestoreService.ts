@@ -1235,6 +1235,7 @@ export async function unblockUser(blockerId: string, blockedId: string): Promise
 export async function submitReport(params: {
   reporterId: string;
   reportedId: string;
+  conversationId: string;
   reason: ReportReason;
   details: string;
 }): Promise<void> {
@@ -1242,6 +1243,7 @@ export async function submitReport(params: {
     await addDoc(collection(db, 'reports'), {
       reporterId: params.reporterId,
       reportedId: params.reportedId,
+      conversationId: params.conversationId,
       reason: params.reason,
       details: clampString(params.details, VOLUMETRIC_LIMITS.MAX_REPORT_DETAILS_LEN),
       status: 'open',

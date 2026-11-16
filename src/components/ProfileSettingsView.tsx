@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   Ban,
+  Bell,
   Camera,
   Check,
   CheckCircle2,
@@ -31,6 +32,7 @@ import {
   STORY_SPARK_PROMPTS,
   VOLUMETRIC_LIMITS,
 } from '../lib/constants';
+import { requestPushNotificationPermission } from '../lib/fcmService';
 import {
   deactivateAccount,
   unblockUser,
@@ -116,6 +118,28 @@ export function ProfileSettingsView({
   const [showMe, setShowMe] = useState(profile.isVisible);
 
   const verificationStatus = getVerificationStatus(profile, privateAccount);
+
+  const [fcmLoading, setFcmLoading] = useState(false);
+  const [fcmNotice, setFcmNotice] = useState<string | null>(null);
+  const [fcmEnabled, setFcmEnabled] = useState(Boolean((privateAccount as any).fcmToken));
+
+  const handleEnablePush = async () => {
+    setFcmLoading(true);
+    setFcmNotice(null);
+    try {
+      const token = await requestPushNotificationPermission(profile.uid);
+      if (token) {
+        setFcmEnabled(true);
+        setFcmNotice('Push notifications successfully enabled!');
+      } else {
+        setFcmNotice('Permission denied or FCM not supported in this browser.');
+      }
+    } catch {
+      setFcmNotice('Failed to enable push notifications.');
+    } finally {
+      setFcmLoading(false);
+    }
+  };
   const photosChanged = havePhotosChanged(profile.photos, photos);
   const photosBelowMinimum = photos.length < VOLUMETRIC_LIMITS.MIN_PHOTOS;
 
@@ -1257,6 +1281,29 @@ export function ProfileSettingsView({
                       className="min-h-[40px] px-4 py-2 rounded-xl bg-[#FFF8EC] hover:bg-[#FDE4D8]/60 border border-[#F5C4A8] text-xs font-bold text-[#3D2817] whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       Manage Cookies
+                    </button>
+                  </div>
+
+                  <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                      <Bell className="w-5 h-5 text-[#E8603A] shrink-0 mt-0.5" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-[#3D2817]">Push Notifications (FCM)</p>
+                        <p className="text-xs text-[#7A5234]">
+                          {fcmEnabled ? 'Real-time push alerts enabled' : 'Receive instant alerts for new matches and messages'}
+                        </p>
+                        {fcmNotice ? (
+                          <p className="text-xs font-semibold text-[#2E6B5C] mt-1">{fcmNotice}</p>
+                        ) : null}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={fcmLoading || fcmEnabled}
+                      onClick={() => void handleEnablePush()}
+                      className="min-h-[40px] px-4 py-2 rounded-xl bg-[#E8603A] hover:bg-[#C44C29] disabled:bg-[#A9D7C8] text-white text-xs font-bold whitespace-nowrap shrink-0 cursor-pointer"
+                    >
+                      {fcmLoading ? 'Enabling...' : fcmEnabled ? 'Enabled' : 'Enable Push'}
                     </button>
                   </div>
 

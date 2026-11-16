@@ -7,25 +7,23 @@ import {
   Heart,
   IdCard,
   Lock,
+  Mail,
   Menu,
   MessageCircle,
   ShieldCheck,
   Sparkles,
   Timer,
   UserCheck,
+  UserPlus,
+  Users,
   X,
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { DEMO_PROFILES } from '../lib/demoProfiles';
 import { AvatarImage } from './AvatarImage';
 import { useCookieConsent } from './CookieConsentFlash';
 import { NearMatchLogo } from './NearMatchLogo';
 import { ScrollPageBackdrop } from './ScrollPageBackdrop';
-
-interface SignInScreenProps {
-  onSignIn: () => void;
-  authError: string | null;
-  onDismissError: () => void;
-}
 
 const NAV_OPTIONS = [
   { href: '#features', label: 'Features' },
@@ -34,13 +32,25 @@ const NAV_OPTIONS = [
   { href: '#preview', label: 'App Preview' },
 ] as const;
 
-export function SignInScreen({
-  onSignIn,
-  authError,
-  onDismissError,
-}: SignInScreenProps) {
+export function SignInScreen() {
+  const {
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithSocial,
+    authError,
+    clearAuthError,
+  } = useAuth();
+
   const { openCookiePreferences } = useCookieConsent();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const headerRef = useRef<HTMLElement | null>(null);
   const heroCard = DEMO_PROFILES[0];
   const secondaryCards = [DEMO_PROFILES[1], DEMO_PROFILES[2]];
@@ -63,8 +73,30 @@ export function SignInScreen({
     };
   }, [menuOpen]);
 
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    setSubmitting(true);
+    clearAuthError();
+    try {
+      if (authMode === 'signup') {
+        await signUpWithEmail(email, password, displayName || 'New Match');
+      } else {
+        await signInWithEmail(email, password);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const openAuth = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+    clearAuthError();
+  };
+
   return (
-    <div className="relative min-h-screen text-[#3D2817] flex flex-col">
+    <div className="relative min-h-screen text-[#3D2817] flex flex-col font-sans">
       {/* Fixed Full-Page Scroll-Driven Backdrop */}
       <ScrollPageBackdrop />
 
@@ -74,17 +106,27 @@ export function SignInScreen({
         className="sticky top-0 z-40 bg-[#FFF8EC]/92 backdrop-blur-md border-b border-[#F5C4A8]"
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 relative">
-          <a href="#top" className="whitespace-nowrap shrink-0">
-            <NearMatchLogo height={40} wordmarkClassName="text-xl sm:text-[26px] text-[#E8603A]" />
+          <a href="#top" className="whitespace-nowrap shrink-0 flex items-center gap-2">
+            <NearMatchLogo height={40} wordmarkClassName="text-xl sm:text-[26px] text-[#E8603A] font-bold" />
           </a>
 
           <div className="flex items-center gap-2.5 shrink-0">
             <button
               type="button"
-              onClick={onSignIn}
-              className="min-h-[42px] px-5 py-2 rounded-full bg-[#E8603A] hover:bg-[#C44C29] text-white text-sm font-bold shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={() => openAuth('signin')}
+              className="min-h-[40px] px-4 py-2 rounded-xl bg-white hover:bg-[#FDE4D8] border border-[#F5C4A8] text-[#3D2817] text-sm font-bold transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5"
             >
-              Open App
+              <Lock className="w-4 h-4 text-[#E8603A]" />
+              <span>Sign In</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => openAuth('signup')}
+              className="min-h-[42px] px-5 py-2 rounded-full bg-[#E8603A] hover:bg-[#C44C29] text-white text-sm font-bold shadow-sm transition-colors whitespace-nowrap shrink-0 cursor-pointer inline-flex items-center gap-1.5"
+            >
+              <UserPlus className="w-4 h-4 text-white" />
+              <span>Create Account</span>
             </button>
 
             <button
@@ -94,7 +136,7 @@ export function SignInScreen({
               aria-expanded={menuOpen}
               className="w-11 h-11 rounded-xl border border-[#F5C4A8] bg-white hover:bg-[#FDE4D8]/70 text-[#3D2817] flex items-center justify-center transition-colors shrink-0 cursor-pointer"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {menuOpen ? <X className="w-5 h-5 font-bold" /> : <Menu className="w-5 h-5 font-bold" />}
             </button>
           </div>
 
@@ -133,8 +175,9 @@ export function SignInScreen({
         />
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-16 lg:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-7 space-y-6">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#A9D7C8]">
-              Real Presence · Real Romance
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#A9D7C8] inline-flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#A9D7C8]" />
+              <span>Real Presence · Real Romance</span>
             </p>
 
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold leading-[1.12] tracking-tight text-balance">
@@ -143,20 +186,20 @@ export function SignInScreen({
               <span className="font-logo font-normal text-[#FFC98B]">starts just around the corner?</span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[#FFF8EC]/95 max-w-xl leading-relaxed">
+            <p className="text-base sm:text-lg text-[#FFF8EC]/95 max-w-xl leading-relaxed font-medium">
               Forget chasing echoes miles away. NearMatch brings together people who already share your skyline, your favorite evening streets, and the quiet hope for something real — with your privacy protected until both hearts say yes.
             </p>
 
-            <p className="max-w-lg border-l border-[#FFC98B]/50 pl-4 py-0.5 text-sm italic text-[#FFC98B]/95 leading-relaxed">
+            <p className="max-w-lg border-l-2 border-[#FFC98B] pl-4 py-0.5 text-sm italic font-semibold text-[#FFC98B]/95 leading-relaxed">
               &ldquo;Half the magic of love is timing — the other half is realizing how close they already were.&rdquo;
             </p>
 
             {authError ? (
               <div className="max-w-md bg-[#FEECEB] border border-[#F5C2C0] rounded-2xl p-4 flex items-start justify-between gap-3 text-[#C0392B]">
-                <p className="text-sm font-semibold">{authError}</p>
+                <p className="text-sm font-bold">{authError}</p>
                 <button
                   type="button"
-                  onClick={onDismissError}
+                  onClick={clearAuthError}
                   className="text-xs font-bold underline shrink-0 cursor-pointer"
                 >
                   Dismiss
@@ -167,25 +210,24 @@ export function SignInScreen({
             <div className="flex flex-col sm:flex-row sm:items-center gap-3.5 pt-1">
               <button
                 type="button"
-                onClick={onSignIn}
+                onClick={() => openAuth('signup')}
                 className="min-h-[52px] px-7 py-3.5 rounded-2xl bg-[#E8603A] hover:bg-[#C44C29] text-white text-base font-bold inline-flex items-center justify-center gap-3 shadow-lg transition-all hover:-translate-y-0.5 cursor-pointer"
               >
-                <svg className="w-5 h-5 bg-white rounded-full p-0.5" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    fill="#EA4335"
-                    d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.4 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.2-1.6H12z"
-                  />
-                </svg>
-                <span>Start matching with Google</span>
+                <UserPlus className="w-5 h-5 text-white" />
+                <span>Create Account &amp; Start Matching</span>
               </button>
 
-              <a
-                href="#safety"
-                className="min-h-[52px] px-6 py-3.5 rounded-2xl bg-white hover:bg-[#FFF8EC] text-[#2E6B5C] border border-[#A9D7C8] text-sm font-bold inline-flex items-center justify-center transition-all hover:-translate-y-0.5"
+              <button
+                type="button"
+                onClick={() => openAuth('signin')}
+                className="min-h-[52px] px-6 py-3.5 rounded-2xl bg-white hover:bg-[#FFF8EC] text-[#2E6B5C] border-2 border-[#A9D7C8] text-base font-bold inline-flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 cursor-pointer"
               >
-                See how we keep it safe
-              </a>
+                <Lock className="w-4 h-4 text-[#2E6B5C]" />
+                <span>Sign In with Username / Email</span>
+              </button>
             </div>
+
+
           </div>
 
           {/* Right Phone Frame Preview */}
@@ -196,7 +238,7 @@ export function SignInScreen({
                 <div className="flex items-center justify-between text-xs font-bold text-[#7A5234]">
                   <NearMatchLogo height={26} showWordmark={false} />
                   <span>Discover</span>
-                  <span className="text-[#2E6B5C]">18+ Verified</span>
+                  <span className="text-[#2E6B5C] font-bold">18+ Verified</span>
                 </div>
 
                 <div className="bg-white rounded-3xl border border-[#F5C4A8] overflow-hidden shadow-sm">
@@ -207,7 +249,7 @@ export function SignInScreen({
                       className="w-full h-full"
                     />
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#2B1A10]/85 via-[#2B1A10]/35 to-transparent p-4 text-white">
-                      <p className="text-[11px] font-mono text-[#A9D7C8]">
+                      <p className="text-[11px] font-mono text-[#A9D7C8] font-bold">
                         92% Match · 2 km away
                       </p>
                       <p className="text-lg font-bold">
@@ -216,10 +258,10 @@ export function SignInScreen({
                     </div>
                   </div>
                   <div className="p-3.5 space-y-2">
-                    <p className="text-xs text-[#7A5234] leading-relaxed line-clamp-2">
+                    <p className="text-xs text-[#7A5234] font-medium leading-relaxed line-clamp-2">
                       {heroCard.bio}
                     </p>
-                    <p className="text-[11px] font-semibold text-[#3D2817]">
+                    <p className="text-[11px] font-bold text-[#3D2817]">
                       {heroCard.interests.slice(0, 3).join(' · ')}
                     </p>
                   </div>
@@ -227,7 +269,7 @@ export function SignInScreen({
 
                 <div className="flex items-center justify-center gap-5 pt-1 pb-2">
                   <div className="w-12 h-12 rounded-full bg-white border border-[#F5C4A8] flex items-center justify-center text-[#7A5234] shadow-sm">
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 font-bold" />
                   </div>
                   <div className="w-14 h-14 rounded-full bg-[#E8603A] flex items-center justify-center text-white shadow-md">
                     <Heart className="w-6 h-6 fill-current" />
@@ -243,13 +285,14 @@ export function SignInScreen({
       <section id="features" className="relative z-10 py-20 bg-[#FFF8EC]/76 backdrop-blur-[2px]">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center max-w-xl mx-auto mb-14 space-y-3">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#2E6B5C]">
-              What you get
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#2E6B5C] inline-flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-[#2E6B5C]" />
+              <span>What you get</span>
             </p>
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3D2817] text-balance">
               Everything a modern dating app needs
             </h2>
-            <p className="text-base text-[#7A5234]">
+            <p className="text-base text-[#7A5234] font-medium">
               Built on live Firebase infrastructure, not a static prototype — every feature below runs on real Firestore queries and strict security rules.
             </p>
           </div>
@@ -310,7 +353,7 @@ export function SignInScreen({
                     <Icon className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold text-[#3D2817]">{feat.title}</h3>
-                  <p className="text-sm text-[#7A5234] leading-relaxed">{feat.desc}</p>
+                  <p className="text-sm text-[#7A5234] font-medium leading-relaxed">{feat.desc}</p>
                 </div>
               );
             })}
@@ -337,8 +380,8 @@ export function SignInScreen({
             {[
               {
                 num: '1',
-                title: 'Sign in with Google',
-                desc: 'Authenticate with your verified Google email and confirm your 18+ date of birth.',
+                title: 'Create account or sign in',
+                desc: 'Use your email and password, or connect instantly with Google, Instagram, or Snapchat.',
               },
               {
                 num: '2',
@@ -361,7 +404,7 @@ export function SignInScreen({
                   {step.num}
                 </div>
                 <h3 className="text-base font-bold text-[#3D2817]">{step.title}</h3>
-                <p className="text-sm text-[#7A5234] leading-relaxed">{step.desc}</p>
+                <p className="text-sm text-[#7A5234] font-medium leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
@@ -379,7 +422,7 @@ export function SignInScreen({
               <h2 className="text-3xl sm:text-4xl font-bold text-[#3D2817] leading-tight text-balance">
                 Safety isn&apos;t a checkbox here — it&apos;s the architecture
               </h2>
-              <p className="text-base text-[#7A5234]">
+              <p className="text-base text-[#7A5234] font-medium">
                 Most of the engineering effort in NearMatch went into the database rules and privacy boundaries you never see directly.
               </p>
             </div>
@@ -415,12 +458,12 @@ export function SignInScreen({
                 const Icon = item.icon;
                 return (
                   <li key={item.title} className="flex items-start gap-4">
-                    <div className="w-9 h-9 rounded-xl bg-[#DCF0EA] text-[#2E6B5C] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-[#DCF0EA] text-[#2E6B5C] flex items-center justify-center shrink-0 mt-0.5 font-bold">
+                      <Icon className="w-4 h-4 font-bold" />
                     </div>
                     <div>
                       <h3 className="text-base font-bold text-[#3D2817]">{item.title}</h3>
-                      <p className="text-sm text-[#7A5234] leading-relaxed">{item.desc}</p>
+                      <p className="text-sm text-[#7A5234] font-medium leading-relaxed">{item.desc}</p>
                     </div>
                   </li>
                 );
@@ -443,8 +486,8 @@ export function SignInScreen({
                   ['adult_age_floor', 'age is int && age >= 18'],
                 ].map(([k, v]) => (
                   <div key={k} className="py-2.5 flex items-baseline justify-between gap-4">
-                    <span className="text-[#F1B896] shrink-0">{k}</span>
-                    <span className="text-[#9ED6C4] text-right">{v}</span>
+                    <span className="text-[#F1B896] shrink-0 font-bold">{k}</span>
+                    <span className="text-[#9ED6C4] text-right font-medium">{v}</span>
                   </div>
                 ))}
               </div>
@@ -467,7 +510,7 @@ export function SignInScreen({
                       <p className="text-sm font-bold truncate">
                         {card.displayName}, {card.age}
                       </p>
-                      <p className="text-[11px] text-white/85 truncate">{card.city}</p>
+                      <p className="text-[11px] text-white/85 font-medium truncate">{card.city}</p>
                     </div>
                   </div>
                 </div>
@@ -489,17 +532,25 @@ export function SignInScreen({
             <h2 className="text-3xl sm:text-4xl font-bold text-balance">
               Ready to meet people around the corner?
             </h2>
-            <p className="text-base text-white/90 max-w-lg mx-auto">
-              Sign in with Google to set up your NearMatch profile in under two minutes and start exploring nearby matches.
+            <p className="text-base text-white/95 font-medium max-w-lg mx-auto">
+              Create an account with your email or connect via social login to set up your NearMatch profile in under two minutes.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={onSignIn}
+                onClick={() => openAuth('signup')}
                 className="min-h-[50px] px-8 py-3 rounded-2xl bg-white hover:bg-[#FDE4D8] text-[#C44C29] text-base font-bold inline-flex items-center gap-2 shadow-md transition-colors cursor-pointer"
               >
-                <Check className="w-5 h-5" />
-                <span>Open NearMatch Web</span>
+                <UserPlus className="w-5 h-5 font-bold" />
+                <span>Create Free Account</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => openAuth('signin')}
+                className="min-h-[50px] px-6 py-3 rounded-2xl bg-[#2B1A10] hover:bg-[#3D2817] text-white text-base font-bold inline-flex items-center gap-2 shadow-md transition-colors cursor-pointer"
+              >
+                <Lock className="w-5 h-5 font-bold" />
+                <span>Sign In</span>
               </button>
             </div>
           </div>
@@ -512,23 +563,24 @@ export function SignInScreen({
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">
             <div className="space-y-4 max-w-sm">
               <NearMatchLogo height={38} wordmarkClassName="text-2xl text-[#E8603A]" />
-              <p className="text-sm text-[#7A5234] leading-relaxed">
+              <p className="text-sm text-[#7A5234] font-medium leading-relaxed">
                 Warm connections, just around the corner. Built with real safety at the core, not bolted on after.
               </p>
 
               <div className="pt-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-[#9E7756] mb-2.5">
-                  Follow NearMatch
+                <p className="text-xs font-bold uppercase tracking-wider text-[#9E7756] mb-2.5 flex items-center gap-1.5">
+                  <Users className="w-4 h-4 text-[#E8603A]" />
+                  <span>Connect &amp; Share NearMatch</span>
                 </p>
                 <div className="flex flex-wrap items-center gap-2.5">
                   <a
-                    href="https://www.instagram.com/"
+                    href="https://www.instagram.com/nearmatch.in?utm_source=qr"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="NearMatch on Instagram"
+                    aria-label="Follow NearMatch on Instagram"
                     className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white border border-[#F5C4A8] hover:border-[#E8603A] hover:bg-[#FDE4D8]/60 text-[#3D2817] hover:text-[#C44C29] text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
                   >
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg className="w-4 h-4 shrink-0 text-[#C44C29]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                       <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
@@ -537,13 +589,13 @@ export function SignInScreen({
                   </a>
 
                   <a
-                    href="https://www.youtube.com/"
+                    href="https://www.youtube.com/@NearMatch"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="NearMatch on YouTube"
+                    aria-label="Subscribe to NearMatch on YouTube"
                     className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white border border-[#F5C4A8] hover:border-[#E8603A] hover:bg-[#FDE4D8]/60 text-[#3D2817] hover:text-[#C44C29] text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
                   >
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg className="w-4 h-4 shrink-0 text-[#E8603A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17" />
                       <path d="m10 15 5-3-5-3v6Z" />
                     </svg>
@@ -551,32 +603,51 @@ export function SignInScreen({
                   </a>
 
                   <a
-                    href="https://www.snapchat.com/"
+                    href="https://www.snapchat.com/web"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="NearMatch on Snapchat"
+                    aria-label="Follow NearMatch on Snapchat"
                     className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white border border-[#F5C4A8] hover:border-[#E8603A] hover:bg-[#FDE4D8]/60 text-[#3D2817] hover:text-[#C44C29] text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
                   >
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg className="w-4 h-4 shrink-0 text-[#D4AC0D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M12 3c-3.1 0-5 2.2-5 5.4v1.7c-.6.2-1.4.1-1.8.4-.4.3-.2 1 .4 1.3.5.3 1.2.4 1.1 1.1-.2 1.2-1.6 2.5-3.2 3 .3.8 1.5 1.1 2.6 1.3.3.1.4.8.7 1.1.4.3 1.2.1 1.9.3.8.3 1.9 1.2 3.3 1.2s2.5-.9 3.3-1.2c.7-.2 1.5 0 1.9-.3.3-.3.4-1 .7-1.1 1.1-.2 2.3-.5 2.6-1.3-1.6-.5-3-1.8-3.2-3-.1-.7.6-.8 1.1-1.1.6-.3.8-1 .4-1.3-.4-.3-1.2-.2-1.8-.4V8.4C17 5.2 15.1 3 12 3z" />
                     </svg>
                     <span>Snapchat</span>
                   </a>
 
                   <a
-                    href="https://www.linkedin.com/"
+                    href="https://www.linkedin.com/in/near-match-8aa05b424"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="NearMatch on LinkedIn"
+                    aria-label="Connect with NearMatch on LinkedIn"
                     className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white border border-[#F5C4A8] hover:border-[#E8603A] hover:bg-[#FDE4D8]/60 text-[#3D2817] hover:text-[#C44C29] text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors"
                   >
-                    <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg className="w-4 h-4 shrink-0 text-[#2E6B5C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
                       <rect width="4" height="12" x="2" y="9" />
                       <circle cx="4" cy="4" r="2" />
                     </svg>
                     <span>LinkedIn</span>
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (navigator.share) {
+                        navigator.share({
+                          title: 'NearMatch',
+                          text: 'Discover people just around the corner on NearMatch!',
+                          url: window.location.href,
+                        }).catch(() => {});
+                      } else {
+                        navigator.clipboard.writeText(window.location.href);
+                        alert('NearMatch link copied to clipboard!');
+                      }
+                    }}
+                    className="min-h-[42px] px-4 py-2 rounded-xl bg-[#E8603A] hover:bg-[#C44C29] text-white text-xs font-bold inline-flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <span>Share NearMatch</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -584,13 +655,13 @@ export function SignInScreen({
             <div className="flex flex-wrap gap-12 text-sm">
               <div className="space-y-2.5">
                 <p className="text-xs font-bold uppercase tracking-wider text-[#9E7756]">Product</p>
-                <a href="#features" className="block font-semibold text-[#7A5234] hover:text-[#E8603A]">
+                <a href="#features" className="block font-bold text-[#7A5234] hover:text-[#E8603A]">
                   Features
                 </a>
-                <a href="#safety" className="block font-semibold text-[#7A5234] hover:text-[#E8603A]">
+                <a href="#safety" className="block font-bold text-[#7A5234] hover:text-[#E8603A]">
                   Trust &amp; Safety
                 </a>
-                <a href="#preview" className="block font-semibold text-[#7A5234] hover:text-[#E8603A]">
+                <a href="#preview" className="block font-bold text-[#7A5234] hover:text-[#E8603A]">
                   App Preview
                 </a>
               </div>
@@ -598,18 +669,22 @@ export function SignInScreen({
                 <p className="text-xs font-bold uppercase tracking-wider text-[#9E7756]">Access</p>
                 <button
                   type="button"
-                  onClick={onSignIn}
-                  className="block font-semibold text-[#7A5234] hover:text-[#E8603A] cursor-pointer"
+                  onClick={() => openAuth('signin')}
+                  className="block font-bold text-[#7A5234] hover:text-[#E8603A] cursor-pointer"
                 >
-                  Open Web App
+                  Sign In
                 </button>
-                <a href="#how-it-works" className="block font-semibold text-[#7A5234] hover:text-[#E8603A]">
-                  How It Works
-                </a>
+                <button
+                  type="button"
+                  onClick={() => openAuth('signup')}
+                  className="block font-bold text-[#7A5234] hover:text-[#E8603A] cursor-pointer"
+                >
+                  Create Account
+                </button>
                 <button
                   type="button"
                   onClick={() => openCookiePreferences(true)}
-                  className="block font-semibold text-[#7A5234] hover:text-[#E8603A] cursor-pointer"
+                  className="block font-bold text-[#7A5234] hover:text-[#E8603A] cursor-pointer"
                 >
                   Cookie Preferences
                 </button>
@@ -626,12 +701,202 @@ export function SignInScreen({
             </div>
           </div>
 
-          <div className="pt-6 border-t border-[#F5C4A8] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[#9E7756]">
+          <div className="pt-6 border-t border-[#F5C4A8] flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-bold text-[#9E7756]">
             <span>© 2026 NearMatch. All rights reserved.</span>
             <span>Made for people who want dating apps to take safety seriously.</span>
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal (Sign In / Create Account with Email & Password + Social Buttons) */}
+      {authModalOpen ? (
+        <div className="fixed inset-0 z-50 bg-[#2B1A10]/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-3xl border border-[#F5C4A8] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="bg-[#FFF8EC] border-b border-[#F5C4A8] p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#E8603A] text-white flex items-center justify-center shadow-sm font-bold">
+                  <NearMatchLogo height={24} showWordmark={false} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#3D2817]">
+                    {authMode === 'signup' ? 'Create NearMatch Account' : 'Sign In to NearMatch'}
+                  </h3>
+                  <p className="text-xs font-bold text-[#7A5234]">
+                    {authMode === 'signup' ? 'Get started in under 2 minutes' : 'Welcome back to your matches'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(false)}
+                className="w-9 h-9 rounded-xl bg-white border border-[#F5C4A8] hover:bg-[#FDE4D8] flex items-center justify-center text-[#3D2817] cursor-pointer"
+              >
+                <X className="w-5 h-5 font-bold" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6">
+              {/* Tab Selector */}
+              <div className="grid grid-cols-2 bg-[#FFF8EC] p-1.5 rounded-2xl border border-[#F5C4A8]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signin');
+                    clearAuthError();
+                  }}
+                  className={`py-2.5 text-sm font-bold rounded-xl transition-all cursor-pointer ${
+                    authMode === 'signin'
+                      ? 'bg-[#E8603A] text-white shadow-sm'
+                      : 'text-[#7A5234] hover:text-[#3D2817]'
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signup');
+                    clearAuthError();
+                  }}
+                  className={`py-2.5 text-sm font-bold rounded-xl transition-all cursor-pointer ${
+                    authMode === 'signup'
+                      ? 'bg-[#E8603A] text-white shadow-sm'
+                      : 'text-[#7A5234] hover:text-[#3D2817]'
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+
+              {authError ? (
+                <div className="bg-[#FEECEB] border border-[#F5C2C0] rounded-2xl p-3 text-xs font-bold text-[#C0392B]">
+                  {authError}
+                </div>
+              ) : null}
+
+              {/* Email / Password Form */}
+              <form onSubmit={handleEmailAuth} className="space-y-4">
+                {authMode === 'signup' ? (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#7A5234] flex items-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5 text-[#E8603A]" />
+                      <span>Display Name</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Ananya Roy"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full h-12 px-4 rounded-2xl border border-[#F5C4A8] bg-[#FFF8EC]/50 text-sm font-bold text-[#3D2817] focus:outline-none focus:border-[#E8603A]"
+                    />
+                  </div>
+                ) : null}
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#7A5234] flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-[#E8603A]" />
+                    <span>Email or Username</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full h-12 px-4 rounded-2xl border border-[#F5C4A8] bg-[#FFF8EC]/50 text-sm font-bold text-[#3D2817] focus:outline-none focus:border-[#E8603A]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold uppercase tracking-wider text-[#7A5234] flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-[#E8603A]" />
+                    <span>Password (6+ characters)</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full h-12 px-4 rounded-2xl border border-[#F5C4A8] bg-[#FFF8EC]/50 text-sm font-bold text-[#3D2817] focus:outline-none focus:border-[#E8603A]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full h-12 rounded-2xl bg-[#E8603A] hover:bg-[#C44C29] text-white text-base font-bold shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <Check className="w-5 h-5 font-bold" />
+                  <span>{submitting ? 'Please wait...' : authMode === 'signup' ? 'Create Account' : 'Sign In'}</span>
+                </button>
+              </form>
+
+              {/* Social Login Divider */}
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-[#F5C4A8]" />
+                <span className="flex-shrink mx-4 text-xs font-bold uppercase tracking-widest text-[#9E7756]">Or connect with social</span>
+                <div className="flex-grow border-t border-[#F5C4A8]" />
+              </div>
+
+              {/* Social Buttons Grid */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => void signInWithGoogle()}
+                  className="h-11 px-4 rounded-2xl bg-[#FFF8EC] hover:bg-[#FDE4D8] border border-[#F5C4A8] text-xs font-bold text-[#3D2817] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#EA4335" d="M12 10.2v3.9h5.4c-.2 1.3-1.5 3.9-5.4 3.9-3.2 0-5.9-2.7-5.9-6s2.7-6 5.9-6c1.9 0 3.1.8 3.8 1.5l2.6-2.5C16.7 3.4 14.6 2.5 12 2.5 6.8 2.5 2.5 6.8 2.5 12s4.3 9.5 9.5 9.5c5.5 0 9.1-3.9 9.1-9.3 0-.6-.1-1.1-.2-1.6H12z" />
+                  </svg>
+                  <span>Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void signInWithSocial('Instagram')}
+                  className="h-11 px-4 rounded-2xl bg-[#FFF8EC] hover:bg-[#FDE4D8] border border-[#F5C4A8] text-xs font-bold text-[#3D2817] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-[#C44C29]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                  </svg>
+                  <span>Instagram</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void signInWithSocial('Snapchat')}
+                  className="h-11 px-4 rounded-2xl bg-[#FFF8EC] hover:bg-[#FDE4D8] border border-[#F5C4A8] text-xs font-bold text-[#3D2817] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-[#D4AC0D]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M12 3c-3.1 0-5 2.2-5 5.4v1.7c-.6.2-1.4.1-1.8.4-.4.3-.2 1 .4 1.3.5.3 1.2.4 1.1 1.1-.2 1.2-1.6 2.5-3.2 3 .3.8 1.5 1.1 2.6 1.3.3.1.4.8.7 1.1.4.3 1.2.1 1.9.3.8.3 1.9 1.2 3.3 1.2s2.5-.9 3.3-1.2c.7-.2 1.5 0 1.9-.3.3-.3.4-1 .7-1.1 1.1-.2 2.3-.5 2.6-1.3-1.6-.5-3-1.8-3.2-3-.1-.7.6-.8 1.1-1.1.6-.3.8-1 .4-1.3-.4-.3-1.2-.2-1.8-.4V8.4C17 5.2 15.1 3 12 3z" />
+                  </svg>
+                  <span>Snapchat</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void signInWithSocial('LinkedIn')}
+                  className="h-11 px-4 rounded-2xl bg-[#FFF8EC] hover:bg-[#FDE4D8] border border-[#F5C4A8] text-xs font-bold text-[#3D2817] flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-[#2E6B5C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+                    <rect width="4" height="12" x="2" y="9" />
+                    <circle cx="4" cy="4" r="2" />
+                  </svg>
+                  <span>LinkedIn</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

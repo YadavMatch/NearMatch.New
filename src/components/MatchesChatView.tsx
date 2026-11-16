@@ -467,6 +467,7 @@ export function MatchesChatView({
       await submitReport({
         reporterId: viewer.uid,
         reportedId: selected.partnerUid,
+        conversationId: selected.id,
         reason: payload.reason,
         details: payload.details,
       });
