@@ -1,6 +1,6 @@
 {
   "name": "NearMatch",
-  "description": "Location-aware dating & real-time match messaging powered by Firebase Auth and Cloud Firestore, featuring snapped ~300m privacy coordinates, multi-factor compatibility scoring, and safety controls.",
+  "description": "Location-aware dating & real-time match messaging powered by Firebase Auth and Cloud Firestore, featuring geolocation-based nearby profile discovery, profile management, and end-to-end user workflows.",
   "requestFramePermissions": ["geolocation"],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
