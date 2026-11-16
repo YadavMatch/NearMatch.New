@@ -613,6 +613,15 @@ export function SignInScreen({
                 >
                   Cookie Preferences
                 </button>
+                <a
+                  href="/privacy.html"
+                  className="block font-semibold text-[#7A5234] hover:text-[#E8603A]"
+                >
+                  Privacy Policy
+                </a>
+                <a href="/terms.html" className="block font-semibold text-[#7A5234] hover:text-[#E8603A]">
+                  Terms of Service
+                </a>
               </div>
             </div>
           </div>

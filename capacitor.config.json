@@ -1,0 +1,16 @@
+{
+  "appId": "in.nearmatch.app",
+  "appName": "NearMatch",
+  "webDir": "dist",
+  "ios": {
+    "webContentsDebuggingEnabled": false,
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": true
+  },
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": ["google.com"]
+    }
+  }
+}

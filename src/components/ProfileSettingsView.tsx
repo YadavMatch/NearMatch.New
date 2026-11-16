@@ -1214,6 +1214,15 @@ export function ProfileSettingsView({
               {/* Privacy & Guidelines */}
               <div className="pt-6 border-t border-[#FDE4D8] space-y-3">
                 <h3 className="text-sm font-bold text-[#3D2817]">2. Privacy &amp; Safety Tools</h3>
+                <p className="text-xs text-[#7A5234]">
+                  <a href="/privacy.html" target="_blank" rel="noreferrer" className="font-semibold underline hover:text-[#E8603A]">
+                    Privacy Policy
+                  </a>
+                  <span className="mx-2">·</span>
+                  <a href="/terms.html" target="_blank" rel="noreferrer" className="font-semibold underline hover:text-[#E8603A]">
+                    Terms of Service
+                  </a>
+                </p>
                 <div className="divide-y divide-[#FDE4D8] rounded-2xl border border-[#F5C4A8] bg-white overflow-hidden">
                   <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-start gap-3">
