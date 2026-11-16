@@ -310,10 +310,11 @@ service cloud.firestore {
     }
 
     function isValidReport(data) {
-      return data.keys().hasAll(['reporterId', 'reportedId', 'reason', 'details', 'status', 'createdAt'])
-      && data.keys().hasOnly(['reporterId', 'reportedId', 'reason', 'details', 'status', 'createdAt'])
+      return data.keys().hasAll(['reporterId', 'reportedId', 'conversationId', 'reason', 'details', 'status', 'createdAt'])
+      && data.keys().hasOnly(['reporterId', 'reportedId', 'conversationId', 'reason', 'details', 'status', 'createdAt'])
       && isValidId(data.reporterId)
       && isValidId(data.reportedId)
+      && isValidCompositeId(data.conversationId)
       && data.reporterId == uid()
       && data.reportedId != uid()
       && data.reason in ['harassment', 'fake_profile', 'inappropriate_content', 'spam', 'underage', 'other']

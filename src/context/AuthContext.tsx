@@ -1,5 +1,13 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as fbSignOut, type User } from 'firebase/auth';
+import { createContext, useContext, useEffect, useState } from 'react';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut as fbSignOut,
+  updateProfile,
+  type User,
+} from 'firebase/auth';
 import { auth, googleProvider } from '../lib/firebase';
 import { subscribeMyPrivateAccount, subscribeMyProfile } from '../lib/firestoreService';
 import type { PrivateAccount, PublicProfile } from '../types/models';
@@ -12,6 +20,9 @@ interface AuthContextValue {
   profileLoading: boolean;
   authError: string | null;
   signInWithGoogle: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
+  signInWithSocial: (providerName: string) => Promise<void>;
   signOut: () => Promise<void>;
   clearAuthError: () => void;
 }
@@ -105,6 +116,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithEmail = async (email: string, pass: string) => {
+    setAuthError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), pass);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Sign-in failed. Check credentials.';
+      setAuthError(message);
+    }
+  };
+
+  const signUpWithEmail = async (email: string, pass: string, name?: string) => {
+    setAuthError(null);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      if (name && cred.user) {
+        await updateProfile(cred.user, { displayName: name.trim() });
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Account creation failed.';
+      setAuthError(message);
+    }
+  };
+
+  const signInWithSocial = async (providerName: string) => {
+    setAuthError(null);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Unable to sign in with ${providerName}.`;
+      setAuthError(message);
+    }
+  };
+
   const signOut = async () => {
     setAuthError(null);
     try {
@@ -125,6 +169,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profileLoading,
         authError,
         signInWithGoogle,
+        signInWithEmail,
+        signUpWithEmail,
+        signInWithSocial,
         signOut,
         clearAuthError: () => setAuthError(null),
       }}
