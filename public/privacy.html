@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Privacy Policy — NearMatch</title>
+<meta name="description" content="How NearMatch collects, uses, and protects your personal data." />
+<meta name="theme-color" content="#E8603A" />
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/legal-style.css" />
+</head>
+<body>
+<div class="wrap">
+<header class="brand"><img src="/icons/icon-192.png" alt="" /><b>NearMatch</b></header>
+
+<div class="draft" id="draft-notice">
+<b>DRAFT — requires legal review before launch.</b>
+<p style="margin:6px 0 0">This document describes what the NearMatch codebase actually does with data, as a starting point for your lawyer. Every <span class="fill">highlighted</span> field must be completed, the whole text reviewed against the laws that apply to you, and this notice deleted before you publish or submit to an app store.</p>
+</div>
+
+<h1>Privacy Policy</h1>
+<p class="meta">Last updated: <span class="fill">[EFFECTIVE DATE]</span> · Controller: <span class="fill">[COMPANY LEGAL NAME]</span>, <span class="fill">[REGISTERED ADDRESS]</span></p>
+
+<h2>1. Who we are</h2>
+<p>NearMatch is a location-aware dating service operated by <span class="fill">[COMPANY LEGAL NAME]</span> ("we", "us"). For privacy questions, contact <span class="fill">[PRIVACY CONTACT EMAIL]</span>. <span class="fill">[APPOINT A DPO / EU-UK REPRESENTATIVE HERE IF REQUIRED]</span></p>
+
+<h2>2. Age requirement</h2>
+<p>NearMatch is strictly for adults aged 18 and over. We collect your date of birth at sign-up to enforce this. We do not knowingly process data about anyone under 18; if we learn an account belongs to a minor, we delete it. You can report a suspected underage account from any profile.</p>
+
+<h2>3. What we collect</h2>
+<table>
+<tr><th>Category</th><th>Examples</th><th>Why</th></tr>
+<tr><td>Account</td><td>Email address, verification status, date of birth</td><td>Create and secure your account, enforce the 18+ rule</td></tr>
+<tr><td>Public profile</td><td>Display name, age, gender, who you are interested in, bio, job title, city, interests, photos</td><td>Shown on your discovery card to other users</td></tr>
+<tr><td>Approximate location</td><td>Coordinates deliberately snapped to a grid of roughly 300 metres</td><td>Show you people nearby without revealing your precise position</td></tr>
+<tr><td>Matching activity</td><td>Likes, passes, super-likes, matches, compatibility scores</td><td>Operate the matching system</td></tr>
+<tr><td>Messages</td><td>Text messages; voice notes stored encrypted</td><td>Deliver conversations between matches</td></tr>
+<tr><td>Identity verification</td><td>Document type, the last four characters of the document number, the name on the document, verification timestamps</td><td>Reduce fake profiles and impersonation</td></tr>
+<tr><td>Safety</td><td>Blocks, reports and their contents, moderation and ban status</td><td>Investigate abuse and enforce our rules</td></tr>
+<tr><td>Technical</td><td>Device and browser data, approximate IP-derived region, cookie and consent choices</td><td>Security, abuse prevention, keeping you signed in</td></tr>
+</table>
+<p>We do <strong>not</strong> ask for your full identity document number, and we never place your email address or date of birth on your public profile. Those live in a separate, owner-only record that other users cannot read.</p>
+
+<h2>4. How your location is handled</h2>
+<p>This matters, so we are specific. When you grant location permission, your device's coordinates are rounded to a grid of approximately 300 metres <em>before</em> they are stored. Only those snapped coordinates are saved and shared. We do not keep a history of your precise positions, and we do not track you in the background. You can turn location sharing off, or hide your profile from discovery entirely, in Settings. <span class="fill">[CONFIRM THIS MATCHES YOUR PRODUCTION BEHAVIOUR BEFORE PUBLISHING]</span></p>
+
+<h2>5. Voice notes</h2>
+<p>Voice notes are encrypted before upload and stored as ciphertext with a separate initialisation vector. <span class="fill">[DESCRIBE YOUR KEY MANAGEMENT ACCURATELY — WHO HOLDS THE KEYS, AND WHETHER YOU CAN DECRYPT. DO NOT CLAIM END-TO-END ENCRYPTION UNLESS IT IS TRUE.]</span></p>
+
+<h2>6. Legal bases</h2>
+<p>Where the GDPR or UK GDPR applies, we rely on: <strong>contract</strong> to run the service you signed up for; <strong>consent</strong> for location access, cookies and optional features, which you may withdraw at any time; <strong>legitimate interests</strong> for safety, fraud prevention and service security; and <strong>legal obligation</strong> where we must retain or disclose data. <span class="fill">[CONFIRM WITH COUNSEL]</span></p>
+
+<h2>7. Who we share with</h2>
+<p>We do not sell your personal data. We share it only with processors that run the service:</p>
+<ul>
+<li><strong>Google Firebase</strong> (Authentication, Cloud Firestore, Hosting) — account, profile, messaging and safety data. Google acts as our processor.</li>
+<li><span class="fill">[LIST ANY OTHER PROCESSOR: AI/GEMINI FEATURES, ANALYTICS, PUSH NOTIFICATIONS, SUPPORT TOOLS, IDENTITY VERIFICATION VENDORS]</span></li>
+</ul>
+<p>We may also disclose data where legally required, or to protect the safety of users or the public. Data may be processed outside your country, including in the United States, under appropriate safeguards. <span class="fill">[NAME THE TRANSFER MECHANISM, E.G. STANDARD CONTRACTUAL CLAUSES]</span></p>
+
+<h2>8. Retention</h2>
+<p>We keep your account data while your account is active. When you delete your account we remove your profile from discovery and delete or irreversibly anonymise your personal data within <span class="fill">[RETENTION PERIOD, E.G. 30 DAYS]</span>, except where we must keep records longer for safety, dispute resolution or legal reasons — for example, reports and ban records, which we retain for <span class="fill">[SAFETY RETENTION PERIOD]</span>. Messages you sent remain visible to the person who received them. <span class="fill">[CONFIRM AGAINST YOUR ACTUAL DELETION IMPLEMENTATION]</span></p>
+
+<h2>9. Your rights</h2>
+<p>Depending on where you live, you may have the right to access, correct, delete, port, restrict or object to the processing of your data, to withdraw consent, and to lodge a complaint with your data protection authority. You can edit your profile and delete your account from within the app at any time. For other requests, contact <span class="fill">[PRIVACY CONTACT EMAIL]</span>; we respond within <span class="fill">[RESPONSE WINDOW]</span>. We will not discriminate against you for exercising these rights.</p>
+
+<h2>10. Security</h2>
+<p>Access to your data is enforced by server-side database rules, not only by the app: your private record is readable only by you, conversations only by their two participants, and an email-verified account is required for most actions. No service can promise perfect security, but we work to protect your data and will notify you and the relevant regulator of a qualifying breach as the law requires.</p>
+
+<h2>11. Cookies</h2>
+<p>We use a small number of cookies and similar local storage for sign-in, security and remembering your consent choice. You are asked for consent on first use and can change it in Settings. <span class="fill">[IF YOU ADD ANALYTICS OR ADVERTISING COOKIES, ITEMISE THEM HERE]</span></p>
+
+<h2>12. Changes</h2>
+<p>If we make material changes we will update the date above and notify you in the app before they take effect.</p>
+
+<footer>
+<a href="/">← Back to NearMatch</a><a href="/terms.html">Terms of Service</a>
+</footer>
+</div>
+</body>
+</html>

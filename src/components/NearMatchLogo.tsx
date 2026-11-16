@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 export const CORE_LOGO_PATH =
-  '/assets/aistudio/ChatGPT_Image_Jun_29__2026__07_26_24_AM_copy_9110dafc.png';
+  '/icons/icon-512.png';
 
 interface NearMatchLogoProps {
   height?: number;

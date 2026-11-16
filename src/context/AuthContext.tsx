@@ -1,14 +1,14 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut as fbSignOut,
   updateProfile,
   type User,
 } from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+import { auth } from '../lib/firebase';
+import { googleSignIn, nativeSignOutIfNeeded } from '../lib/nativeAuth';
 import { subscribeMyPrivateAccount, subscribeMyProfile } from '../lib/firestoreService';
 import type { PrivateAccount, PublicProfile } from '../types/models';
 
@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithGoogle = async () => {
     setAuthError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      await googleSignIn();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unable to complete Google sign-in.';
       setAuthError(message);
@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithSocial = async (providerName: string) => {
     setAuthError(null);
     try {
-      await signInWithPopup(auth, googleProvider);
+      await googleSignIn();
     } catch (err) {
       const message = err instanceof Error ? err.message : `Unable to sign in with ${providerName}.`;
       setAuthError(message);
@@ -152,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setAuthError(null);
     try {
+      await nativeSignOutIfNeeded();
       await fbSignOut(auth);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Sign-out failed.';
