@@ -79,7 +79,18 @@ service cloud.firestore {
       && data.jobTitle is string && data.jobTitle.size() <= 80
       && data.city is string && data.city.size() <= 80
       && data.interests is list && data.interests.size() <= 12
-      && (data.interests.size() == 0 || (data.interests[0] is string && data.interests[0].size() <= 40))
+      && (data.interests.size() < 1 || (data.interests[0] is string && data.interests[0].size() >= 1 && data.interests[0].size() <= 40))
+      && (data.interests.size() < 2 || (data.interests[1] is string && data.interests[1].size() >= 1 && data.interests[1].size() <= 40))
+      && (data.interests.size() < 3 || (data.interests[2] is string && data.interests[2].size() >= 1 && data.interests[2].size() <= 40))
+      && (data.interests.size() < 4 || (data.interests[3] is string && data.interests[3].size() >= 1 && data.interests[3].size() <= 40))
+      && (data.interests.size() < 5 || (data.interests[4] is string && data.interests[4].size() >= 1 && data.interests[4].size() <= 40))
+      && (data.interests.size() < 6 || (data.interests[5] is string && data.interests[5].size() >= 1 && data.interests[5].size() <= 40))
+      && (data.interests.size() < 7 || (data.interests[6] is string && data.interests[6].size() >= 1 && data.interests[6].size() <= 40))
+      && (data.interests.size() < 8 || (data.interests[7] is string && data.interests[7].size() >= 1 && data.interests[7].size() <= 40))
+      && (data.interests.size() < 9 || (data.interests[8] is string && data.interests[8].size() >= 1 && data.interests[8].size() <= 40))
+      && (data.interests.size() < 10 || (data.interests[9] is string && data.interests[9].size() >= 1 && data.interests[9].size() <= 40))
+      && (data.interests.size() < 11 || (data.interests[10] is string && data.interests[10].size() >= 1 && data.interests[10].size() <= 40))
+      && (data.interests.size() < 12 || (data.interests[11] is string && data.interests[11].size() >= 1 && data.interests[11].size() <= 40))
       && data.photos is list && data.photos.size() >= 1 && data.photos.size() <= 6
       && data.photos[0] is string && data.photos[0].size() >= 1 && data.photos[0].size() <= 45000
       && (data.photos.size() < 2 || (data.photos[1] is string && data.photos[1].size() >= 1 && data.photos[1].size() <= 45000))
@@ -104,12 +115,26 @@ service cloud.firestore {
       && (!('storySparks' in data) || (
         data.storySparks is list &&
         data.storySparks.size() <= 3 &&
-        (data.storySparks.size() == 0 || (
+        (data.storySparks.size() < 1 || (
           data.storySparks[0] is map &&
           data.storySparks[0].keys().hasAll(['question', 'answer']) &&
           data.storySparks[0].keys().hasOnly(['question', 'answer']) &&
           data.storySparks[0].question is string && data.storySparks[0].question.size() <= 100 &&
           data.storySparks[0].answer is string && data.storySparks[0].answer.size() <= 200
+        )) &&
+        (data.storySparks.size() < 2 || (
+          data.storySparks[1] is map &&
+          data.storySparks[1].keys().hasAll(['question', 'answer']) &&
+          data.storySparks[1].keys().hasOnly(['question', 'answer']) &&
+          data.storySparks[1].question is string && data.storySparks[1].question.size() <= 100 &&
+          data.storySparks[1].answer is string && data.storySparks[1].answer.size() <= 200
+        )) &&
+        (data.storySparks.size() < 3 || (
+          data.storySparks[2] is map &&
+          data.storySparks[2].keys().hasAll(['question', 'answer']) &&
+          data.storySparks[2].keys().hasOnly(['question', 'answer']) &&
+          data.storySparks[2].question is string && data.storySparks[2].question.size() <= 100 &&
+          data.storySparks[2].answer is string && data.storySparks[2].answer.size() <= 200
         ))
       ))
       && (!('isProfileVerified' in data) || data.isProfileVerified is bool)
@@ -159,7 +184,22 @@ service cloud.firestore {
       && (!('preferredInterests' in data) || (
         data.preferredInterests is list &&
         data.preferredInterests.size() <= 16 &&
-        (data.preferredInterests.size() == 0 || (data.preferredInterests[0] is string && data.preferredInterests[0].size() <= 40))
+        (data.preferredInterests.size() < 1 || (data.preferredInterests[0] is string && data.preferredInterests[0].size() >= 1 && data.preferredInterests[0].size() <= 40)) &&
+        (data.preferredInterests.size() < 2 || (data.preferredInterests[1] is string && data.preferredInterests[1].size() >= 1 && data.preferredInterests[1].size() <= 40)) &&
+        (data.preferredInterests.size() < 3 || (data.preferredInterests[2] is string && data.preferredInterests[2].size() >= 1 && data.preferredInterests[2].size() <= 40)) &&
+        (data.preferredInterests.size() < 4 || (data.preferredInterests[3] is string && data.preferredInterests[3].size() >= 1 && data.preferredInterests[3].size() <= 40)) &&
+        (data.preferredInterests.size() < 5 || (data.preferredInterests[4] is string && data.preferredInterests[4].size() >= 1 && data.preferredInterests[4].size() <= 40)) &&
+        (data.preferredInterests.size() < 6 || (data.preferredInterests[5] is string && data.preferredInterests[5].size() >= 1 && data.preferredInterests[5].size() <= 40)) &&
+        (data.preferredInterests.size() < 7 || (data.preferredInterests[6] is string && data.preferredInterests[6].size() >= 1 && data.preferredInterests[6].size() <= 40)) &&
+        (data.preferredInterests.size() < 8 || (data.preferredInterests[7] is string && data.preferredInterests[7].size() >= 1 && data.preferredInterests[7].size() <= 40)) &&
+        (data.preferredInterests.size() < 9 || (data.preferredInterests[8] is string && data.preferredInterests[8].size() >= 1 && data.preferredInterests[8].size() <= 40)) &&
+        (data.preferredInterests.size() < 10 || (data.preferredInterests[9] is string && data.preferredInterests[9].size() >= 1 && data.preferredInterests[9].size() <= 40)) &&
+        (data.preferredInterests.size() < 11 || (data.preferredInterests[10] is string && data.preferredInterests[10].size() >= 1 && data.preferredInterests[10].size() <= 40)) &&
+        (data.preferredInterests.size() < 12 || (data.preferredInterests[11] is string && data.preferredInterests[11].size() >= 1 && data.preferredInterests[11].size() <= 40)) &&
+        (data.preferredInterests.size() < 13 || (data.preferredInterests[12] is string && data.preferredInterests[12].size() >= 1 && data.preferredInterests[12].size() <= 40)) &&
+        (data.preferredInterests.size() < 14 || (data.preferredInterests[13] is string && data.preferredInterests[13].size() >= 1 && data.preferredInterests[13].size() <= 40)) &&
+        (data.preferredInterests.size() < 15 || (data.preferredInterests[14] is string && data.preferredInterests[14].size() >= 1 && data.preferredInterests[14].size() <= 40)) &&
+        (data.preferredInterests.size() < 16 || (data.preferredInterests[15] is string && data.preferredInterests[15].size() >= 1 && data.preferredInterests[15].size() <= 40))
       ));
     }
 
@@ -185,9 +225,18 @@ service cloud.firestore {
       && data.profilePhoto is string && data.profilePhoto.size() >= 1 && data.profilePhoto.size() <= 45000
       && data.compatibilityScore is number && data.compatibilityScore >= 0 && data.compatibilityScore <= 100
       && data.matchReasons is list && data.matchReasons.size() <= 6
-      && (data.matchReasons.size() == 0 || (data.matchReasons[0] is string && data.matchReasons[0].size() <= 120))
+      && (data.matchReasons.size() < 1 || (data.matchReasons[0] is string && data.matchReasons[0].size() >= 1 && data.matchReasons[0].size() <= 120))
+      && (data.matchReasons.size() < 2 || (data.matchReasons[1] is string && data.matchReasons[1].size() >= 1 && data.matchReasons[1].size() <= 120))
+      && (data.matchReasons.size() < 3 || (data.matchReasons[2] is string && data.matchReasons[2].size() >= 1 && data.matchReasons[2].size() <= 120))
+      && (data.matchReasons.size() < 4 || (data.matchReasons[3] is string && data.matchReasons[3].size() >= 1 && data.matchReasons[3].size() <= 120))
+      && (data.matchReasons.size() < 5 || (data.matchReasons[4] is string && data.matchReasons[4].size() >= 1 && data.matchReasons[4].size() <= 120))
+      && (data.matchReasons.size() < 6 || (data.matchReasons[5] is string && data.matchReasons[5].size() >= 1 && data.matchReasons[5].size() <= 120))
       && data.messages is list && data.messages.size() <= 100
       && (data.messages.size() == 0 || data.messages[0] is map)
+      && (data.messages.size() < 2 || data.messages[1] is map)
+      && (data.messages.size() < 3 || data.messages[2] is map)
+      && (data.messages.size() < 4 || data.messages[3] is map)
+      && (data.messages.size() < 5 || data.messages[4] is map)
       && data.isActive is bool
       && data.createdAt is timestamp
       && data.updatedAt is timestamp;
@@ -241,7 +290,12 @@ service cloud.firestore {
       && isValidParticipantSummary(data.participantSummaries[data.userHigh], data.userHigh)
       && data.compatibilityScore is number && data.compatibilityScore >= 0 && data.compatibilityScore <= 100
       && data.matchReasons is list && data.matchReasons.size() <= 6
-      && (data.matchReasons.size() == 0 || (data.matchReasons[0] is string && data.matchReasons[0].size() <= 120))
+      && (data.matchReasons.size() < 1 || (data.matchReasons[0] is string && data.matchReasons[0].size() >= 1 && data.matchReasons[0].size() <= 120))
+      && (data.matchReasons.size() < 2 || (data.matchReasons[1] is string && data.matchReasons[1].size() >= 1 && data.matchReasons[1].size() <= 120))
+      && (data.matchReasons.size() < 3 || (data.matchReasons[2] is string && data.matchReasons[2].size() >= 1 && data.matchReasons[2].size() <= 120))
+      && (data.matchReasons.size() < 4 || (data.matchReasons[3] is string && data.matchReasons[3].size() >= 1 && data.matchReasons[3].size() <= 120))
+      && (data.matchReasons.size() < 5 || (data.matchReasons[4] is string && data.matchReasons[4].size() >= 1 && data.matchReasons[4].size() <= 120))
+      && (data.matchReasons.size() < 6 || (data.matchReasons[5] is string && data.matchReasons[5].size() >= 1 && data.matchReasons[5].size() <= 120))
       && data.isActive is bool
       && data.matchedAt is timestamp
       && data.updatedAt is timestamp
@@ -363,7 +417,6 @@ service cloud.firestore {
         && incoming().updatedAt == request.time
         && incoming().lastActiveAt == request.time
         && (
-          // Action 1: Edit profile details & onboarding status (photo changes require 5-6 photos and reset Selfie + Age verification)
           (
             incoming().isDeleted == false &&
             incoming().diff(existing()).affectedKeys().hasOnly([
@@ -391,7 +444,6 @@ service cloud.firestore {
             )
           )
           ||
-          // Action 2: Toggle discovery visibility or refresh active timestamp
           (
             incoming().isDeleted == false &&
             incoming().diff(existing()).affectedKeys().hasOnly([
@@ -399,7 +451,6 @@ service cloud.firestore {
             ])
           )
           ||
-          // Action 3: Age/ID & Selfie verification completion
           (
             incoming().isDeleted == false &&
             incoming().diff(existing()).affectedKeys().hasOnly([
@@ -408,7 +459,6 @@ service cloud.firestore {
             ])
           )
           ||
-          // Action 4: Self-service account deactivation (terminal)
           (
             incoming().isDeleted == true &&
             incoming().isVisible == false &&
@@ -581,7 +631,6 @@ service cloud.firestore {
         && incoming().matchedAt == existing().matchedAt
         && incoming().updatedAt == request.time
         && (
-          // Action 1: Update latest message preview on active match
           (
             incoming().isActive == true &&
             !isBlockedPair(existing().userLow, existing().userHigh) &&
@@ -592,7 +641,6 @@ service cloud.firestore {
             ])
           )
           ||
-          // Action 2: Unmatch / Close conversation (terminal)
           (
             incoming().isActive == false &&
             incoming().closedBy == uid() &&
