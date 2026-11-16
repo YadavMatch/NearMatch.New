@@ -4,18 +4,8 @@ import { doc, getDocFromServer, getFirestore } from 'firebase/firestore';
 
 const readEnv = (key: string): string => {
   const value = import.meta.env[key];
-  if (
-    !value ||
-    value === 'YOUR_FIREBASE_API_KEY' ||
-    value === 'YOUR_PROJECT_ID' ||
-    value === 'YOUR_MESSAGING_SENDER_ID' ||
-    value === 'YOUR_FIREBASE_APP_ID' ||
-    value.startsWith('YOUR_') ||
-    value.startsWith('MY_')
-  ) {
-    throw new Error(
-      `Missing Firebase configuration: ${key}. Copy .env.example to .env.local and set the real Firebase web settings.`
-    );
+  if (!value || value.startsWith('MY_') || value.startsWith('YOUR_')) {
+    throw new Error(`Missing Firebase configuration: ${key}. Copy .env.example to .env.local and set the real Firebase web settings.`);
   }
   return value;
 };
