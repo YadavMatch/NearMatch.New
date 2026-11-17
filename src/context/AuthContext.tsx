@@ -29,19 +29,22 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+  const [authReady, setAuthReady] = useState<boolean>(false);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [privateAccount, setPrivateAccount] = useState<PrivateAccount | null>(null);
-  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let unsubProfile: (() => void) | null = null;
     let unsubPrivate: (() => void) | null = null;
 
-    const unsubAuth = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthReady(true);
+
       if (unsubProfile) {
         unsubProfile();
         unsubProfile = null;
@@ -51,10 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         unsubPrivate = null;
       }
 
-      setUser(firebaseUser);
-      setAuthReady(true);
-
-      if (!firebaseUser) {
+      if (!currentUser) {
         setProfile(null);
         setPrivateAccount(null);
         setProfileLoading(false);
@@ -62,38 +62,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setProfileLoading(true);
-      let gotProfile = false;
-      let gotPrivate = false;
+      let profileDone = false;
+      let privateDone = false;
+
       const checkDone = () => {
-        if (gotProfile && gotPrivate) {
+        if (profileDone && privateDone) {
           setProfileLoading(false);
         }
       };
 
       unsubProfile = subscribeMyProfile(
-        firebaseUser.uid,
-        (nextProfile) => {
-          setProfile(nextProfile);
-          gotProfile = true;
+        currentUser.uid,
+        (p) => {
+          setProfile(p);
+          profileDone = true;
           checkDone();
         },
         (err) => {
           setAuthError(err.message);
-          gotProfile = true;
+          profileDone = true;
           checkDone();
         }
       );
 
       unsubPrivate = subscribeMyPrivateAccount(
-        firebaseUser.uid,
-        (nextPrivate) => {
-          setPrivateAccount(nextPrivate);
-          gotPrivate = true;
+        currentUser.uid,
+        (acc) => {
+          setPrivateAccount(acc);
+          privateDone = true;
           checkDone();
         },
         (err) => {
           setAuthError(err.message);
-          gotPrivate = true;
+          profileDone = true;
           checkDone();
         }
       );
@@ -145,8 +146,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setAuthError(`${providerName} sign-in is not configured yet. Please use Google or email.`);
       return;
     }
-
-    await signInWithGoogle();
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : `Unable to sign in with ${providerName}.`;
+      setAuthError(message);
+    }
   };
 
   const signOut = async () => {
@@ -180,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
