@@ -141,12 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithSocial = async (providerName: string) => {
     setAuthError(null);
-    try {
-      await googleSignIn();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : `Unable to sign in with ${providerName}.`;
-      setAuthError(message);
+    if (providerName.toLowerCase() !== 'google') {
+      setAuthError(`${providerName} sign-in is not configured yet. Please use Google or email.`);
+      return;
     }
+
+    await signInWithGoogle();
   };
 
   const signOut = async () => {
