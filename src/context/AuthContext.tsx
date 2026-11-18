@@ -8,7 +8,7 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { googleSignIn, nativeSignOutIfNeeded } from '../lib/nativeAuth';
+import { appleSignIn, googleSignIn, nativeSignOutIfNeeded } from '../lib/nativeAuth';
 import { subscribeMyPrivateAccount, subscribeMyProfile } from '../lib/firestoreService';
 import type { PrivateAccount, PublicProfile } from '../types/models';
 
@@ -29,83 +29,44 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [authReady, setAuthReady] = useState<boolean>(false);
+  const [authReady, setAuthReady] = useState(false);
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [privateAccount, setPrivateAccount] = useState<PrivateAccount | null>(null);
-  const [profileLoading, setProfileLoading] = useState<boolean>(false);
+  const [profileLoading, setProfileLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    let unsubProfile: (() => void) | null = null;
-    let unsubPrivate: (() => void) | null = null;
-
-    const unsubAuth = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setAuthReady(true);
+    });
+    return unsubscribe;
+  }, []);
 
-      if (unsubProfile) {
-        unsubProfile();
-        unsubProfile = null;
-      }
-      if (unsubPrivate) {
-        unsubPrivate();
-        unsubPrivate = null;
-      }
+  useEffect(() => {
+    if (!user) {
+      setProfile(null);
+      setPrivateAccount(null);
+      setProfileLoading(false);
+      return;
+    }
 
-      if (!currentUser) {
-        setProfile(null);
-        setPrivateAccount(null);
-        setProfileLoading(false);
-        return;
-      }
-
-      setProfileLoading(true);
-      let profileDone = false;
-      let privateDone = false;
-
-      const checkDone = () => {
-        if (profileDone && privateDone) {
-          setProfileLoading(false);
-        }
-      };
-
-      unsubProfile = subscribeMyProfile(
-        currentUser.uid,
-        (p) => {
-          setProfile(p);
-          profileDone = true;
-          checkDone();
-        },
-        (err) => {
-          setAuthError(err.message);
-          profileDone = true;
-          checkDone();
-        }
-      );
-
-      unsubPrivate = subscribeMyPrivateAccount(
-        currentUser.uid,
-        (acc) => {
-          setPrivateAccount(acc);
-          privateDone = true;
-          checkDone();
-        },
-        (err) => {
-          setAuthError(err.message);
-          profileDone = true;
-          checkDone();
-        }
-      );
+    setProfileLoading(true);
+    const unsubProfile = subscribeMyProfile(user.uid, (p) => {
+      setProfile(p);
+      setProfileLoading(false);
+    });
+    const unsubAccount = subscribeMyPrivateAccount(user.uid, (acc) => {
+      setPrivateAccount(acc);
     });
 
     return () => {
-      unsubAuth();
-      if (unsubProfile) unsubProfile();
-      if (unsubPrivate) unsubPrivate();
+      unsubProfile();
+      unsubAccount();
     };
-  }, []);
+  }, [user]);
 
   const signInWithGoogle = async () => {
     setAuthError(null);
@@ -142,12 +103,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signInWithSocial = async (providerName: string) => {
     setAuthError(null);
+    if (providerName.toLowerCase() === 'apple') {
+      try {
+        await appleSignIn();
+      } catch (err) {
+        setAuthError(err instanceof Error ? err.message : `Unable to sign in with Apple.`);
+      }
+      return;
+    }
     if (providerName.toLowerCase() !== 'google') {
-      setAuthError(`${providerName} sign-in is not configured yet. Please use Google or email.`);
+      setAuthError(`${providerName} sign-in is not configured yet. Please use Google, Apple, or email.`);
       return;
     }
     try {
-      await signInWithGoogle();
+      await googleSignIn();
     } catch (err) {
       const message = err instanceof Error ? err.message : `Unable to sign in with ${providerName}.`;
       setAuthError(message);
@@ -185,7 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext);
