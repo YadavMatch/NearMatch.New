@@ -11,7 +11,7 @@ same build). Both serve the identical `dist/` output.
 **throws on startup if a required one is missing**. The values are *not* in the
 repository: `firebase-applet-config.json` is untracked and `.env*` is ignored.
 
-So on any fresh clone, or any CI runner:
+For a local checkout:
 
 ```bash
 cp .env.example .env.local
@@ -32,18 +32,22 @@ Then fill in the six required values from the Firebase console
 | `VITE_FIREBASE_MEASUREMENT_ID` | optional |
 | `VITE_FIREBASE_OAUTH_CLIENT_ID` | optional |
 | `VITE_FIREBASE_RECAPTCHA_SITE_KEY` | optional |
-| `GEMINI_API_KEY` | see note below |
+| `GEMINI_API_KEY` | not currently used by the app; see note below |
+
+For CI, configure the six required `VITE_FIREBASE_*` values in the CI
+platform's variables/secrets instead of committing an `.env.local` file. The
+optional values can be added if the build or a feature needs them.
 
 `VITE_*` variables are **compiled into the public bundle**. That is correct and
 expected for Firebase web config — it is not secret, and access is controlled by
 Firestore rules, not by hiding these values. Never put a private key in a
 `VITE_` variable.
 
-**On `GEMINI_API_KEY`:** `metadata.json` declares
-`MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API`, but no source file currently calls
-Gemini — `@google/genai` is installed and unreferenced. Nothing breaks without
-the key today. Either supply it when you add Gemini features, or drop the
-capability declaration from `metadata.json`.
+**On `GEMINI_API_KEY`:** `@google/genai` is installed, but the current app does
+not call Gemini and `metadata.json` declares no major capabilities. The key is
+not needed to build or run the app today. If Gemini features are added later,
+provide the key only to a trusted server-side runtime; do not expose it through
+a `VITE_` variable or ship it in the browser bundle.
 
 ---
 
@@ -175,7 +179,7 @@ reachable privacy policy; a dating app without one will be rejected.
 - **Image weight.** `src/assets/images/` holds nine JPEGs of 790–980 KB each,
   ~8 MB total, shipped at full size. Resizing and converting to WebP/AVIF would
   cut most of it. Left untouched because it changes the artwork.
-- **`firestore.rules` "Pillar 0".** The `match /{document=**} { allow read,
+- **`firestore.rules` "Pillar 0."** The `match /{document=**} { allow read,
   write: if false; }` block denies nothing — in Firestore, access is granted if
   *any* rule allows, so a blanket `if false` cannot override the rules below it.
   Firestore already defaults to deny. Harmless, but it is not the safety net it
