@@ -28,33 +28,16 @@ import { ScrollPageBackdrop } from './ScrollPageBackdrop';
 const NAV_OPTIONS = [
   { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How it works' },
-  { href: '#safety', label: 'Trust & Safety' },
-  { href: '#preview', label: 'App Preview' },
-] as const;
-
-export function SignInScreen() {
-  const {
-    signInWithGoogle,
-    signInWithEmail,
-    signUpWithEmail,
-    signInWithSocial,
-    authError,
-    clearAuthError,
-  } = useAuth();
-
-  const { openCookiePreferences } = useCookieConsent();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const headerRef = useRef<HTMLElement | null>(null);
-  const heroCard = DEMO_PROFILES[0];
-  const secondaryCards = [DEMO_PROFILES[1], DEMO_PROFILES[2]];
-
+  <button
+    type="button"
+    onClick={() => void signInWithSocial('Apple')}
+    className="h-11 px-4 rounded-2xl bg-black hover:bg-gray-800 border border-black text-xs font-bold text-white flex items-center justify-center gap-2 transition-colors cursor-pointer"
+  >
+    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.09 2.31-.9 3.5-.92 1.83-.02 3.19.85 4 2.05-3.32 1.95-2.75 6.13.62 7.53-.78 1.96-1.78 3.51-3.2 3.51M12.03 7.25c-.15-2.23 1.66-4.07 3.72-4.25.26 2.4-2 4.35-3.72 4.25" />
+    </svg>
+    <span>Apple</span>
+  </button>
   useEffect(() => {
     if (!menuOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
