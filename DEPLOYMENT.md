@@ -35,8 +35,11 @@ Then fill in the six required values from the Firebase console
 | `GEMINI_API_KEY` | not currently used by the app; see note below |
 
 For CI, configure the six required `VITE_FIREBASE_*` values in the CI
-platform's variables/secrets instead of committing an `.env.local` file. The
-optional values can be added if the build or a feature needs them.
+platform's variables/secrets and expose them to the steps that run the build
+(and to any test step that imports Firebase at startup). They must be present
+when Vite builds the app; adding them only to a later deploy step is too late.
+Do not commit an `.env.local` file. The optional values can be added if the
+build or a feature needs them.
 
 `VITE_*` variables are **compiled into the public bundle**. That is correct and
 expected for Firebase web config — it is not secret, and access is controlled by
