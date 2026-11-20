@@ -17,7 +17,7 @@ React 19 + Vite  ──►  Firebase Auth  ──►  Cloud Firestore
 | **Backend** | Firebase Auth + Cloud Firestore (703 lines of rules) |
 | **iOS** | Capacitor 7, native Google sign-in |
 | **Bundle id** | `in.nearmatch.app` — confirm before creating the App Store record |
-| **Tests** | 35 passing across 11 files |
+| **Tests** | 42 unit tests across 12 files, plus 16 Firestore rules tests |
 
 ## Quick start
 
@@ -39,6 +39,7 @@ missing — the config is not committed. See
 | `bun run build` | Production build to `dist/` |
 | `bun run preview` | Serve the built output |
 | `bun test` | Unit tests |
+| `bun run test:rules` | Firestore rules tests against the local emulator |
 | `bun run typecheck` | `tsc --noEmit` |
 | `bun run ios:sync` | Build, then sync into the iOS project |
 | `bun run ios:open` | Open the iOS project in Xcode (macOS only) |
