@@ -65,6 +65,21 @@ bun run build
 
 All four must pass. `bun run build` writes `dist/`.
 
+The authorisation rules have their own suite, which needs the Firestore
+emulator (downloaded on first run, and it needs Java):
+
+```bash
+bun run test:rules
+```
+
+Run it whenever you touch `firestore.rules`. It covers the account-erasure
+paths and, just as importantly, the refusals — scrubbing another user's data,
+deleting a safety report, deleting a swipe while the profile still exists.
+
+Watch for `maximum of 1000 expressions to evaluate has been reached` in its
+output. `isValidMatch` sits close to that Firestore limit, so adding checks to
+the match rules can silently break writes that currently succeed.
+
 ---
 
 ## 2. Web — Firebase Hosting

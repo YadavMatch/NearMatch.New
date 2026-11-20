@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { buildBlockedUidSet, filterActiveConversations } from '../lib/blocking';
 import { DEMO_PROFILES } from '../lib/demoProfiles';
 import {
+  DELETED_ACCOUNT_LABEL,
+  isErasedSummary,
   sendDemoSafetyCheck,
   subscribeDemoMatches,
   subscribeDiscoveryProfiles,
@@ -199,6 +201,7 @@ export function useNearMatchData(
       const partnerUid = match.participants.find((id) => id !== profile.uid) ?? match.userHigh;
       if (blockedSet.has(partnerUid)) continue;
       const summary = match.participantSummaries[partnerUid];
+      const partnerErased = isErasedSummary(summary);
       const partnerProfile = allCandidateProfiles.get(partnerUid);
       const lastAt = match.lastMessageAt ?? match.matchedAt;
       const seenAt = seenTimestamps[match.id] ?? 0;
@@ -215,11 +218,13 @@ export function useNearMatchData(
         kind: 'live',
         id: match.id,
         partnerUid,
-        partnerName: summary?.displayName ?? partnerProfile?.displayName ?? 'Member',
-        partnerAge: summary?.age ?? partnerProfile?.age ?? 25,
-        partnerPhoto: summary?.photo ?? partnerProfile?.photos[0] ?? '',
-        partnerCity: summary?.city ?? partnerProfile?.city ?? 'Nearby',
-        partnerJobTitle: summary?.jobTitle ?? partnerProfile?.jobTitle ?? '',
+        partnerName: partnerErased
+          ? DELETED_ACCOUNT_LABEL
+          : (summary?.displayName || partnerProfile?.displayName || 'Member'),
+        partnerAge: partnerErased ? 0 : (summary?.age || partnerProfile?.age || 25),
+        partnerPhoto: partnerErased ? '' : (summary?.photo || partnerProfile?.photos[0] || ''),
+        partnerCity: partnerErased ? '' : (summary?.city || partnerProfile?.city || 'Nearby'),
+        partnerJobTitle: partnerErased ? '' : (summary?.jobTitle || partnerProfile?.jobTitle || ''),
         compatibilityScore: match.compatibilityScore,
         matchReasons: match.matchReasons,
         lastMessageText:

@@ -51,7 +51,10 @@ export function formatVoiceDuration(seconds: number): string {
 }
 
 export function buildVoiceMessageSummary(durationSec: number): string {
-  return `Encrypted voice note (${formatVoiceDuration(durationSec)})`;
+  // "Voice note (encrypted)" rather than "Encrypted voice note": the note is
+  // encrypted at rest, but the key is derivable server-side, so the wording
+  // must not read as a claim of end-to-end encryption.
+  return `Voice note (encrypted) (${formatVoiceDuration(durationSec)})`;
 }
 
 export function sanitizeAudioMimeType(rawMimeType: string): string {

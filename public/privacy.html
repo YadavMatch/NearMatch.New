@@ -22,10 +22,11 @@
 </div>
 
 <h1>Privacy Policy</h1>
-<p class="meta">Last updated: <span class="fill">[EFFECTIVE DATE]</span> · Controller: <span class="fill">[COMPANY LEGAL NAME]</span>, <span class="fill">[REGISTERED ADDRESS]</span></p>
+<p class="meta">Last updated: November 20, 2026 · Controller: NM Interactive Private Limited, <span class="fill">[REGISTERED ADDRESS — Noida / Delhi NCR registered office]</span></p>
 
 <h2>1. Who we are</h2>
-<p>NearMatch is a location-aware dating service operated by <span class="fill">[COMPANY LEGAL NAME]</span> ("we", "us"). For privacy questions, contact <span class="fill">[PRIVACY CONTACT EMAIL]</span>. <span class="fill">[APPOINT A DPO / EU-UK REPRESENTATIVE HERE IF REQUIRED]</span></p>
+<p>NearMatch is a location-aware dating service operated by NM Interactive Private Limited ("we", "us"), a company incorporated in India with its registered office at <span class="fill">[REGISTERED ADDRESS — Noida / Delhi NCR registered office]</span>. For privacy questions, contact <a href="mailto:privacy@nearmatch.in">privacy@nearmatch.in</a>.</p>
+<p>NearMatch is offered to users in India and is not currently directed at or marketed to users in the European Economic Area or the United Kingdom. We have therefore not appointed a Data Protection Officer or an Article 27 representative. <span class="fill">[IF YOU BEGIN TARGETING THE EEA OR UK, THIS MUST BE REVISITED WITH COUNSEL — A DPO AND/OR ARTICLE 27 REPRESENTATIVE MAY BECOME MANDATORY]</span></p>
 
 <h2>2. Age requirement</h2>
 <p>NearMatch is strictly for adults aged 18 and over. We collect your date of birth at sign-up to enforce this. We do not knowingly process data about anyone under 18; if we learn an account belongs to a minor, we delete it. You can report a suspected underage account from any profile.</p>
@@ -37,44 +38,55 @@
 <tr><td>Public profile</td><td>Display name, age, gender, who you are interested in, bio, job title, city, interests, photos</td><td>Shown on your discovery card to other users</td></tr>
 <tr><td>Approximate location</td><td>Coordinates deliberately snapped to a grid of roughly 300 metres</td><td>Show you people nearby without revealing your precise position</td></tr>
 <tr><td>Matching activity</td><td>Likes, passes, super-likes, matches, compatibility scores</td><td>Operate the matching system</td></tr>
-<tr><td>Messages</td><td>Text messages; voice notes stored encrypted</td><td>Deliver conversations between matches</td></tr>
+<tr><td>Messages</td><td>Text messages; voice notes, stored encrypted</td><td>Deliver conversations between matches</td></tr>
 <tr><td>Identity verification</td><td>Document type, the last four characters of the document number, the name on the document, verification timestamps</td><td>Reduce fake profiles and impersonation</td></tr>
 <tr><td>Safety</td><td>Blocks, reports and their contents, moderation and ban status</td><td>Investigate abuse and enforce our rules</td></tr>
+<tr><td>Push notifications</td><td>A Firebase Cloud Messaging (FCM) device token, stored against your account if you grant notification permission</td><td>Send you match and message alerts</td></tr>
 <tr><td>Technical</td><td>Device and browser data, approximate IP-derived region, cookie and consent choices</td><td>Security, abuse prevention, keeping you signed in</td></tr>
 </table>
 <p>We do <strong>not</strong> ask for your full identity document number, and we never place your email address or date of birth on your public profile. Those live in a separate, owner-only record that other users cannot read.</p>
 
 <h2>4. How your location is handled</h2>
-<p>This matters, so we are specific. When you grant location permission, your device's coordinates are rounded to a grid of approximately 300 metres <em>before</em> they are stored. Only those snapped coordinates are saved and shared. We do not keep a history of your precise positions, and we do not track you in the background. You can turn location sharing off, or hide your profile from discovery entirely, in Settings. <span class="fill">[CONFIRM THIS MATCHES YOUR PRODUCTION BEHAVIOUR BEFORE PUBLISHING]</span></p>
+<p>This matters, so we are specific. When you grant location permission, your device's coordinates are rounded to a grid of approximately 300 metres <em>before</em> they are stored. Only those snapped coordinates are saved and shared. We do not keep a history of your precise positions, and we do not track you in the background. You can turn location sharing off, or hide your profile from discovery entirely, in Settings.</p>
 
 <h2>5. Voice notes</h2>
-<p>Voice notes are encrypted before upload and stored as ciphertext with a separate initialisation vector. <span class="fill">[DESCRIBE YOUR KEY MANAGEMENT ACCURATELY — WHO HOLDS THE KEYS, AND WHETHER YOU CAN DECRYPT. DO NOT CLAIM END-TO-END ENCRYPTION UNLESS IT IS TRUE.]</span></p>
+<p>Voice notes are encrypted on your device before upload (AES-256-GCM) and stored as ciphertext with a separate initialisation vector. They are also encrypted in transit over HTTPS.</p>
+<p><strong>This is not end-to-end encryption.</strong> The encryption key is derived by the application from the conversation identifier and the two participants' account identifiers, so we are able to derive the same key and decrypt a voice note. We do so only where necessary to investigate a safety report or where the law requires it. We tell you this plainly because describing it as end-to-end encrypted would be untrue, and you should not treat a voice note as something only you and the recipient can ever read.</p>
 
 <h2>6. Legal bases</h2>
-<p>Where the GDPR or UK GDPR applies, we rely on: <strong>contract</strong> to run the service you signed up for; <strong>consent</strong> for location access, cookies and optional features, which you may withdraw at any time; <strong>legitimate interests</strong> for safety, fraud prevention and service security; and <strong>legal obligation</strong> where we must retain or disclose data. <span class="fill">[CONFIRM WITH COUNSEL]</span></p>
+<p>We process your data to perform the contract you entered into when you created an account; on your consent for location access, push notifications and cookies, which you may withdraw at any time; on our legitimate interests in safety, fraud prevention and service security; and to meet legal obligations. Where India's Digital Personal Data Protection Act applies, consent and the statutory legitimate-uses grounds are the operative bases. Should the GDPR or UK GDPR become applicable because we begin offering the service in those regions, the equivalent Article 6 bases would apply. <span class="fill">[CONFIRM THE DPDP ACT MAPPING AND NOTICE REQUIREMENTS WITH COUNSEL]</span></p>
 
 <h2>7. Who we share with</h2>
 <p>We do not sell your personal data. We share it only with processors that run the service:</p>
 <ul>
-<li><strong>Google Firebase</strong> (Authentication, Cloud Firestore, Hosting) — account, profile, messaging and safety data. Google acts as our processor.</li>
-<li><span class="fill">[LIST ANY OTHER PROCESSOR: AI/GEMINI FEATURES, ANALYTICS, PUSH NOTIFICATIONS, SUPPORT TOOLS, IDENTITY VERIFICATION VENDORS]</span></li>
+<li><strong>Google Firebase</strong> — our only processor. Specifically: <strong>Firebase Authentication</strong> (sign-in, email verification), <strong>Cloud Firestore</strong> (profiles, matches, messages, safety records), <strong>Firebase Hosting</strong> (serving this site) and <strong>Firebase Cloud Messaging</strong> (push notification tokens and delivery). Google acts as our processor under its data processing terms.</li>
+<li>We use no analytics, advertising, attribution or AI processor, and no third-party identity verification vendor. If that changes, this list will be updated before the new processor begins handling your data.</li>
 </ul>
-<p>We may also disclose data where legally required, or to protect the safety of users or the public. Data may be processed outside your country, including in the United States, under appropriate safeguards. <span class="fill">[NAME THE TRANSFER MECHANISM, E.G. STANDARD CONTRACTUAL CLAUSES]</span></p>
+<p>We may also disclose data where legally required, or to protect the safety of users or the public.</p>
+<p><strong>International transfers.</strong> Firebase processes and stores data in Google Cloud regions that may sit outside India, including in the United States. Those transfers are covered by the data protection terms and Standard Contractual Clauses in Google's Cloud Data Processing Addendum, which we accept as Google's customer. <span class="fill">[CONFIRM THE FIRESTORE REGION ACTUALLY PROVISIONED, AND CHECK THE TRANSFER POSITION UNDER INDIA'S DPDP ACT WITH COUNSEL]</span></p>
 
 <h2>8. Retention</h2>
-<p>We keep your account data while your account is active. When you delete your account we remove your profile from discovery and delete or irreversibly anonymise your personal data within <span class="fill">[RETENTION PERIOD, E.G. 30 DAYS]</span>, except where we must keep records longer for safety, dispute resolution or legal reasons — for example, reports and ban records, which we retain for <span class="fill">[SAFETY RETENTION PERIOD]</span>. Messages you sent remain visible to the person who received them. <span class="fill">[CONFIRM AGAINST YOUR ACTUAL DELETION IMPLEMENTATION]</span></p>
-
+<p>We keep your account data while your account is active. When you delete your account from Settings, the following are deleted immediately and permanently: your profile (display name, age, gender, bio, job title, city, interests and photos), your approximate coordinates, your private record (email address and date of birth), your likes and passes, the blocks you created, and your sign-in itself. Your name, photo, city and job title are also removed from every match you were part of, so the person you matched with sees only <em>Deleted account</em>.</p>
+<p>Three things deliberately survive deletion:</p>
+<ul>
+<li><strong>Messages you already sent</strong> remain in the other person's conversation. They are that person's record of an exchange they took part in, and we do not remove them from their account.</li>
+<li><strong>Safety reports and ban records</strong> are retained for <span class="fill">[SAFETY RETENTION PERIOD — CONFIRM WITH COUNSEL]</span> so that a banned user cannot clear their history by deleting and re-registering. We rely on legitimate interests for this.</li>
+<li><strong>Likes and passes other people made toward you</strong> are their records, not yours, and stay with their accounts.</li>
+</ul>
+<p>Deletion is immediate rather than scheduled: the records above are removed as you confirm, not queued for a later purge. Residual copies may persist for up to 30 days in our provider's encrypted backups and in operational logs, after which they are overwritten in the ordinary course. We do not restore deleted accounts from those backups.</p>
+<p>If deleting the sign-in fails because you have not signed in recently, your personal data is still deleted at that point; signing in once more and deleting again removes the sign-in too.</p>
 <h2>9. Your rights</h2>
-<p>Depending on where you live, you may have the right to access, correct, delete, port, restrict or object to the processing of your data, to withdraw consent, and to lodge a complaint with your data protection authority. You can edit your profile and delete your account from within the app at any time. For other requests, contact <span class="fill">[PRIVACY CONTACT EMAIL]</span>; we respond within <span class="fill">[RESPONSE WINDOW]</span>. We will not discriminate against you for exercising these rights.</p>
+<p>You may have the right to access, correct, delete, port, restrict or object to the processing of your data, to withdraw consent, to nominate someone to exercise your rights, and to complain to the relevant data protection authority — in India, the Data Protection Board. You can edit your profile and delete your account from within the app at any time; §8 sets out exactly what deletion removes.</p>
+<p>For any other request, contact <a href="mailto:privacy@nearmatch.in">privacy@nearmatch.in</a>. We respond within <span class="fill">[RESPONSE WINDOW — CONFIRM WITH COUNSEL; 30 DAYS IS THE COMMON STANDARD, AND THE GDPR WOULD REQUIRE ONE MONTH IF IT BECOMES APPLICABLE]</span>. We will not discriminate against you for exercising these rights.</p>
 
 <h2>10. Security</h2>
 <p>Access to your data is enforced by server-side database rules, not only by the app: your private record is readable only by you, conversations only by their two participants, and an email-verified account is required for most actions. No service can promise perfect security, but we work to protect your data and will notify you and the relevant regulator of a qualifying breach as the law requires.</p>
 
 <h2>11. Cookies</h2>
-<p>We use a small number of cookies and similar local storage for sign-in, security and remembering your consent choice. You are asked for consent on first use and can change it in Settings. <span class="fill">[IF YOU ADD ANALYTICS OR ADVERTISING COOKIES, ITEMISE THEM HERE]</span></p>
+<p>We use a small number of cookies and similar local storage for sign-in, security and remembering your consent choice. You are asked for consent on first use and can change it in Settings. We set no analytics or advertising cookies. If you allow notifications, Firebase Cloud Messaging also stores a device token so we can deliver them; you can revoke this in your browser or device settings. <span class="fill">[IF YOU ADD ANALYTICS OR ADVERTISING COOKIES LATER, ITEMISE THEM HERE]</span></p>
 
 <h2>12. Changes</h2>
-<p>If we make material changes we will update the date above and notify you in the app before they take effect.</p>
+<p>If we make material changes we will update the date above and notify you in the app before they take effect. Questions about this policy go to <a href="mailto:privacy@nearmatch.in">privacy@nearmatch.in</a>.</p>
 
 <footer>
 <a href="/">← Back to NearMatch</a><a href="/terms.html">Terms of Service</a>

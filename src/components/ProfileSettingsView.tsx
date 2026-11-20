@@ -32,9 +32,9 @@ import {
   STORY_SPARK_PROMPTS,
   VOLUMETRIC_LIMITS,
 } from '../lib/constants';
+import { useAuth } from '../context/AuthContext';
 import { requestPushNotificationPermission } from '../lib/fcmService';
 import {
-  deactivateAccount,
   unblockUser,
   updateDiscoveryPreferences,
   updateProfileDetails,
@@ -78,6 +78,7 @@ export function ProfileSettingsView({
   onSignOut,
 }: ProfileSettingsViewProps) {
   const { consentSummary, openCookiePreferences } = useCookieConsent();
+  const { deleteAccount } = useAuth();
 
   const [activeSection, setActiveSection] = useState<ProfileSection>(initialSection);
 
@@ -273,13 +274,14 @@ export function ProfileSettingsView({
   const handleDeactivate = async () => {
     setDeleting(true);
     try {
-      await deactivateAccount(profile.uid);
+      await deleteAccount();
       setShowDeleteModal(false);
       onSignOut();
     } catch (err) {
+      setShowDeleteModal(false);
       setFeedback({
         kind: 'error',
-        text: err instanceof Error ? err.message : 'Could not deactivate account.',
+        text: err instanceof Error ? err.message : 'Could not delete account.',
       });
       setDeleting(false);
     }
@@ -1356,7 +1358,7 @@ export function ProfileSettingsView({
                   <div>
                     <p className="text-sm font-bold text-[#C0392B]">Delete Account</p>
                     <p className="text-xs text-[#7A5234]">
-                      Permanently remove private PII and hide your profile card from NearMatch.
+                      Permanently delete your profile, photos, location and sign-in. This cannot be undone.
                     </p>
                   </div>
                   <button
@@ -1390,9 +1392,9 @@ export function ProfileSettingsView({
 
       {showDeleteModal ? (
         <ConfirmActionModal
-          title="Deactivate your NearMatch account?"
-          description="Your private account data (email, DOB, and filters) will be deleted immediately and your public card will be permanently hidden."
-          confirmLabel="Deactivate & Sign Out"
+          title="Delete your NearMatch account?"
+          description="This cannot be undone. Your profile, photos, bio, location, email, date of birth, likes and passes are deleted for good, and your name and photo are removed from every match. Messages you already sent stay in the other person's conversation, and safety reports are kept. Your sign-in is deleted last."
+          confirmLabel="Delete permanently"
           destructive
           busy={deleting}
           onConfirm={handleDeactivate}
