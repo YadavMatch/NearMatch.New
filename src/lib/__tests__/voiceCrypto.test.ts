@@ -26,7 +26,7 @@ test('encryptVoiceBytes and decryptVoiceBytes roundtrip across either participan
   assert.ok(payload.ciphertextBase64.length >= 16);
   assert.ok(payload.ivBase64.length >= 12);
 
-  // Decryption works regardless of sender/recipient order because key derivation sorts participant UIDs
+  // Decryption works regardless of sender/recipient order because key derivation sorts participant UIDs.
   const decryptedByRecipient = await decryptVoiceBytes({
     ciphertextBase64: payload.ciphertextBase64,
     ivBase64: payload.ivBase64,
@@ -142,11 +142,11 @@ test('encryptVoiceBytes rejects empty audio and oversized payloads and clamps du
   assert.equal(clamped.durationSec, VOLUMETRIC_LIMITS.MAX_VOICE_DURATION_SEC);
 });
 
-test('voice formatting helpers sanitize mime types and format durations', () => {
+test('voice formatting helpers use accurate non-E2EE summary copy', () => {
   assert.equal(formatVoiceDuration(0), '0:00');
   assert.equal(formatVoiceDuration(9.4), '0:09');
   assert.equal(formatVoiceDuration(25), '0:25');
-  assert.equal(buildVoiceMessageSummary(12), 'Encrypted voice note (0:12)');
+  assert.equal(buildVoiceMessageSummary(12), 'Voice note (encrypted) (0:12)');
   assert.equal(sanitizeAudioMimeType('audio/ogg;codecs=opus'), 'audio/ogg;codecs=opus');
   assert.equal(sanitizeAudioMimeType('application/javascript'), 'audio/webm');
 });
