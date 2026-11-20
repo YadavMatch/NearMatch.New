@@ -54,13 +54,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setProfileLoading(true);
-    const unsubProfile = subscribeMyProfile(user.uid, (p) => {
-      setProfile(p);
-      setProfileLoading(false);
-    });
-    const unsubAccount = subscribeMyPrivateAccount(user.uid, (acc) => {
-      setPrivateAccount(acc);
-    });
+    const unsubProfile = subscribeMyProfile(
+      user.uid,
+      (p) => {
+        setProfile(p);
+        setProfileLoading(false);
+      },
+      (err) => {
+        setAuthError(err.message);
+        setProfileLoading(false);
+      },
+    );
+    const unsubAccount = subscribeMyPrivateAccount(
+      user.uid,
+      (acc) => {
+        setPrivateAccount(acc);
+      },
+      (err) => {
+        setAuthError(err.message);
+      },
+    );
 
     return () => {
       unsubProfile();

@@ -89,7 +89,7 @@ export function SignInScreen() {
       >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <NearMatchLogo className="w-10 h-10" />
+            <NearMatchLogo height={40} showWordmark={false} />
             <span className="font-extrabold text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-[#2C1810] via-[#F2542D] to-[#2C1810] bg-clip-text text-transparent">
               NearMatch
             </span>
@@ -221,31 +221,31 @@ export function SignInScreen() {
           {/* Hero Cards Preview */}
           <div className="lg:col-span-5 relative flex justify-center items-center py-8">
             <div className="relative w-full max-w-sm aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border-4 border-white/80 transform rotate-1 transition-transform hover:rotate-0 duration-300">
-              <AvatarImage src={heroCard.photos[0]} alt={heroCard.name} className="w-full h-full object-cover" />
+              <AvatarImage src={heroCard.photos[0]} name={heroCard.displayName} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 text-white">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-extrabold text-2xl">{heroCard.name}, {heroCard.age}</span>
+                  <span className="font-extrabold text-2xl">{heroCard.displayName}, {heroCard.age}</span>
                   <UserCheck className="w-5 h-5 text-[#F2542D] fill-current" />
                 </div>
                 <p className="text-sm text-white/80 font-medium mb-3">{heroCard.bio}</p>
                 <div className="flex items-center justify-between text-xs font-bold text-white/90 bg-white/20 backdrop-blur-md px-3 py-2 rounded-xl border border-white/20">
                   <span className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                    {heroCard.distance} away
+                    Nearby
                   </span>
-                  <span>{heroCard.location}</span>
+                  <span>{heroCard.city}</span>
                 </div>
               </div>
             </div>
 
             {/* Floating Background Card 1 */}
             <div className="absolute -top-4 -left-4 w-48 aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border-2 border-white/60 transform -rotate-6 opacity-60 hidden sm:block pointer-events-none">
-              <AvatarImage src={secondaryCards[0].photos[0]} alt="" className="w-full h-full object-cover" />
+              <AvatarImage src={secondaryCards[0].photos[0]} name="" className="w-full h-full object-cover" />
             </div>
 
             {/* Floating Background Card 2 */}
             <div className="absolute -bottom-6 -right-4 w-44 aspect-[3/4] rounded-2xl overflow-hidden shadow-lg border-2 border-white/60 transform rotate-8 opacity-60 hidden sm:block pointer-events-none">
-              <AvatarImage src={secondaryCards[1].photos[0]} alt="" className="w-full h-full object-cover" />
+              <AvatarImage src={secondaryCards[1].photos[0]} name="" className="w-full h-full object-cover" />
             </div>
           </div>
         </section>
@@ -323,14 +323,14 @@ export function SignInScreen() {
       <footer className="border-t border-black/5 py-12 bg-black/5">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs text-[#8C6B5D] font-medium">
           <div className="flex items-center gap-2">
-            <NearMatchLogo className="w-6 h-6" />
+            <NearMatchLogo height={24} showWordmark={false} />
             <span className="font-bold text-[#2C1810]">NearMatch</span>
             <span>&copy; {new Date().getFullYear()} NearMatch Inc. All rights reserved.</span>
           </div>
           <div className="flex items-center gap-6">
             <button
               type="button"
-              onClick={openCookiePreferences}
+              onClick={() => openCookiePreferences()}
               className="hover:text-[#F2542D] transition-colors cursor-pointer"
             >
               Cookie Preferences
@@ -358,7 +358,7 @@ export function SignInScreen() {
             </button>
             
             <div className="text-center flex flex-col items-center gap-2">
-              <NearMatchLogo className="w-12 h-12" />
+              <NearMatchLogo height={48} showWordmark={false} />
               <h2 className="text-2xl font-black text-[#2C1810]">
                 {authMode === 'signin' ? 'Welcome Back' : 'Create Account'}
               </h2>
