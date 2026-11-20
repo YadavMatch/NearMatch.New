@@ -254,16 +254,46 @@ service cloud.firestore {
       && (!('note' in data) || (data.note is string && data.note.size() <= 240));
     }
 
-    function isValidParticipantSummary(summary, expectedUid) {
+    function hasSummaryShape(summary, expectedUid) {
       return summary is map
       && summary.keys().hasAll(['uid', 'displayName', 'age', 'photo', 'city', 'jobTitle'])
       && summary.keys().hasOnly(['uid', 'displayName', 'age', 'photo', 'city', 'jobTitle'])
-      && summary.uid == expectedUid
-      && summary.displayName is string && summary.displayName.size() >= 1 && summary.displayName.size() <= 40
-      && summary.age is int && summary.age >= 18 && summary.age <= 99
-      && summary.photo is string && summary.photo.size() >= 1 && summary.photo.size() <= 45000
-      && summary.city is string && summary.city.size() <= 80
-      && summary.jobTitle is string && summary.jobTitle.size() <= 80;
+      && summary.uid == expectedUid;
+    }
+
+    // A summary left behind after its owner erased their account. Every
+    // human-readable field is emptied; the uid stays so the match document
+    // remains structurally valid. The UI renders this as "Deleted account".
+    function isErasedParticipantSummary(summary, expectedUid) {
+      return hasSummaryShape(summary, expectedUid)
+      && summary.displayName == ''
+      && summary.age == 0
+      && summary.photo == ''
+      && summary.city == ''
+      && summary.jobTitle == '';
+    }
+
+    // age == 0 marks the erased shape and selects the cheap branch. This is a
+    // ternary rather than an || of two validators so that only one branch is
+    // ever evaluated: matches sit close to the 1000-expression rule limit.
+    function isValidParticipantSummary(summary, expectedUid) {
+      return hasSummaryShape(summary, expectedUid)
+      && (
+        summary.age == 0
+          ? (
+            summary.displayName == ''
+            && summary.photo == ''
+            && summary.city == ''
+            && summary.jobTitle == ''
+          )
+          : (
+            summary.displayName is string && summary.displayName.size() >= 1 && summary.displayName.size() <= 40
+            && summary.age is int && summary.age >= 18 && summary.age <= 99
+            && summary.photo is string && summary.photo.size() >= 1 && summary.photo.size() <= 45000
+            && summary.city is string && summary.city.size() <= 80
+            && summary.jobTitle is string && summary.jobTitle.size() <= 80
+          )
+      );
     }
 
     function isValidMatch(data) {
@@ -468,7 +498,11 @@ service cloud.firestore {
           )
         );
 
-      allow delete: if false;
+      // Erasure: the owner may delete their own profile document outright.
+      // This is what makes "delete my account" remove the display name, age,
+      // bio, job title, city, interests, photos and approximate coordinates
+      // rather than just hiding them behind isDeleted.
+      allow delete: if isOwner(userId) && isValidId(userId);
 
       // Isolated Private PII & Discovery Preferences
       match /private/{docId} {
@@ -583,13 +617,22 @@ service cloud.firestore {
 
       allow update: if false;
 
-      // Allow swipe undo only by the actor within 3 minutes and only if no match exists
+      // Allow swipe undo only by the actor within 3 minutes and only if no match exists.
+      // The second branch is account erasure: once the actor's profile document is
+      // gone they may remove every swipe they cast. Gating on the missing profile
+      // keeps this from becoming an unlimited undo for active accounts.
       allow delete: if isVerified()
         && isValidCompositeId(swipeId)
         && existing().actorId == uid()
-        && (request.time.toMillis() - existing().createdAt.toMillis()) <= 180000
-        && !exists(/databases/$(database)/documents/matches/$(uid() + '_' + existing().targetId))
-        && !exists(/databases/$(database)/documents/matches/$(existing().targetId + '_' + uid()));
+        && (
+          (
+            (request.time.toMillis() - existing().createdAt.toMillis()) <= 180000
+            && !exists(/databases/$(database)/documents/matches/$(uid() + '_' + existing().targetId))
+            && !exists(/databases/$(database)/documents/matches/$(existing().targetId + '_' + uid()))
+          )
+          ||
+          !exists(/databases/$(database)/documents/profiles/$(uid()))
+        );
     }
 
     // ------------------------------------------------------------------
@@ -606,6 +649,9 @@ service cloud.firestore {
       allow create: if isVerified()
         && isValidCompositeId(matchId)
         && isValidMatch(incoming())
+        // A new match always carries live summaries; age 0 is the erased marker.
+        && incoming().participantSummaries[incoming().userLow].age != 0
+        && incoming().participantSummaries[incoming().userHigh].age != 0
         && matchId == incoming().userLow + '_' + incoming().userHigh
         && uid() in incoming().participants
         && incoming().isActive == true
@@ -648,6 +694,25 @@ service cloud.firestore {
               'isActive', 'closedBy', 'updatedAt'
             ])
           )
+        );
+
+      // Erasure path: a participant blanks their OWN summary while deleting
+      // their account. Everything else on the document is pinned, including
+      // the other participant's summary, and unlike the branches above this
+      // works on a closed match too.
+      // No isValidMatch() here on purpose: affectedKeys() pins every other
+      // field to the already-validated document, and re-running the full
+      // validator would push this rule past the 1000-expression limit.
+      allow update: if isVerified()
+        && isValidCompositeId(matchId)
+        && uid() in existing().participants
+        && isErasedParticipantSummary(incoming().participantSummaries[uid()], uid())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['participantSummaries', 'updatedAt'])
+        && incoming().updatedAt == request.time
+        && (
+          uid() == existing().userLow
+            ? incoming().participantSummaries[existing().userHigh] == existing().participantSummaries[existing().userHigh]
+            : incoming().participantSummaries[existing().userLow] == existing().participantSummaries[existing().userLow]
         );
 
       allow delete: if false;

@@ -4,6 +4,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
@@ -16,6 +17,12 @@ import {
   writeBatch,
   type Unsubscribe,
 } from 'firebase/firestore';
+import {
+  DELETED_ACCOUNT_LABEL,
+  ERASED_PARTICIPANT_SUMMARY,
+  isErasedSummary,
+  type AccountErasureReport,
+} from './accountErasure';
 import { PORTRAIT_PRESETS, VOLUMETRIC_LIMITS } from './constants';
 import { buildDemoGreeting, buildDemoReply, shouldDemoReciprocate } from './demoProfiles';
 import { db, handleFirestoreError, OperationType } from './firebase';
@@ -791,20 +798,129 @@ export async function saveRealLifeCheckInInterests(
   }
 }
 
-export async function deactivateAccount(uid: string): Promise<void> {
+/**
+ * Permanently erase a user's personal data.
+ *
+ * Order matters and is enforced by firestore.rules: swipes only become
+ * deletable once the profile document is gone, which is what stops this
+ * path from doubling as an unlimited swipe-undo for live accounts.
+ *
+ * Each step is independent and idempotent, so an interrupted run can simply
+ * be repeated. Steps run most-sensitive-first, so a partial run always
+ * removes the worst of the data rather than the easiest of it.
+ *
+ * Deliberately left behind:
+ *  - messages already delivered to the other person, which are their record
+ *    of the conversation, and are disclosed as retained in the privacy policy;
+ *  - safety reports and ban records, retained on legitimate-interest grounds;
+ *  - swipes other people cast toward this user, which are their data.
+ *
+ * Deleting the Firebase Auth user is the caller's job: it needs a recent
+ * sign-in, so it belongs with the UI that can prompt for reauthentication.
+ */
+export { DELETED_ACCOUNT_LABEL, ERASED_PARTICIPANT_SUMMARY, isErasedSummary };
+export type { AccountErasureReport };
+
+export async function eraseAccountData(uid: string): Promise<AccountErasureReport> {
+  const report: AccountErasureReport = {
+    matchesScrubbed: 0,
+    swipesDeleted: 0,
+    blocksDeleted: 0,
+    demoMatchesDeleted: 0,
+    profileDeleted: false,
+    privateRecordDeleted: false,
+  };
+
+  // 1. Private record: email address and date of birth.
   try {
-    const batch = writeBatch(db);
-    batch.update(doc(db, 'profiles', uid), {
-      isDeleted: true,
-      isVisible: false,
-      lastActiveAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
-    batch.delete(doc(db, 'profiles', uid, 'private', 'info'));
-    await batch.commit();
+    await deleteDoc(doc(db, 'profiles', uid, 'private', 'info'));
+    report.privateRecordDeleted = true;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `profiles/${uid}/private/info`);
+    throw error;
+  }
+
+  // 2. Blank this user's denormalised summary on every match they are part of.
+  //    Without this, the display name, photo, city and job title survive in
+  //    each match document even after the profile is deleted.
+  try {
+    const matchSnap = await getDocs(
+      query(collection(db, 'matches'), where('participants', 'array-contains', uid))
+    );
+    for (const matchDoc of matchSnap.docs) {
+      await updateDoc(matchDoc.ref, {
+        [`participantSummaries.${uid}`]: { uid, ...ERASED_PARTICIPANT_SUMMARY },
+        updatedAt: serverTimestamp(),
+      });
+      report.matchesScrubbed += 1;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.UPDATE, 'matches');
+    throw error;
+  }
+
+  // 3. Demo matches live under the profile and are the user's alone.
+  try {
+    const demoSnap = await getDocs(collection(db, 'profiles', uid, 'demoMatches'));
+    for (const demoDoc of demoSnap.docs) {
+      await deleteDoc(demoDoc.ref);
+      report.demoMatchesDeleted += 1;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, `profiles/${uid}/demoMatches`);
+    throw error;
+  }
+
+  // 4. Blocks this user created. Blocks created against them stay: they are
+  //    the other person's safety decision, not this user's data.
+  try {
+    const blockSnap = await getDocs(
+      query(collection(db, 'blocks'), where('blockerId', '==', uid))
+    );
+    for (const blockDoc of blockSnap.docs) {
+      await deleteDoc(blockDoc.ref);
+      report.blocksDeleted += 1;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'blocks');
+    throw error;
+  }
+
+  // 5. Read the swipe ids before the profile goes, because the list rule
+  //    needs a verified session and we want the ids in hand either way.
+  let swipeRefs: ReturnType<typeof doc>[] = [];
+  try {
+    const swipeSnap = await getDocs(
+      query(collection(db, 'swipes'), where('actorId', '==', uid))
+    );
+    swipeRefs = swipeSnap.docs.map((d) => d.ref);
+  } catch (error) {
+    handleFirestoreError(error, OperationType.LIST, 'swipes');
+    throw error;
+  }
+
+  // 6. The profile document itself: display name, age, gender, bio, job
+  //    title, city, interests, photos and approximate coordinates.
+  try {
+    await deleteDoc(doc(db, 'profiles', uid));
+    report.profileDeleted = true;
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, `profiles/${uid}`);
+    throw error;
   }
+
+  // 7. Swipes, now that the missing profile unlocks the erasure branch.
+  try {
+    for (const ref of swipeRefs) {
+      await deleteDoc(ref);
+      report.swipesDeleted += 1;
+    }
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, 'swipes');
+    throw error;
+  }
+
+  return report;
 }
 
 export async function recordSwipe(params: {

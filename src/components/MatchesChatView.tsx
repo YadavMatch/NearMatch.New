@@ -838,7 +838,7 @@ export function MatchesChatView({
                   />
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-[#3D2817] group-hover:underline truncate">
-                      {selected.partnerName}, {selected.partnerAge}
+                      {selected.partnerName}{selected.partnerAge > 0 ? `, ${selected.partnerAge}` : ''}
                     </p>
                     <p className="text-xs text-[#2E6B5C] font-medium truncate">
                       {selected.compatibilityScore}% compatible · {selected.partnerCity}

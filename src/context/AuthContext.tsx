@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
+  deleteUser,
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut as fbSignOut,
@@ -9,7 +10,12 @@ import {
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { appleSignIn, googleSignIn, nativeSignOutIfNeeded } from '../lib/nativeAuth';
-import { subscribeMyPrivateAccount, subscribeMyProfile } from '../lib/firestoreService';
+import {
+  eraseAccountData,
+  subscribeMyPrivateAccount,
+  subscribeMyProfile,
+  type AccountErasureReport,
+} from '../lib/firestoreService';
 import type { PrivateAccount, PublicProfile } from '../types/models';
 
 interface AuthContextValue {
@@ -24,6 +30,7 @@ interface AuthContextValue {
   signUpWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
   signInWithSocial: (providerName: string) => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<AccountErasureReport>;
   clearAuthError: () => void;
 }
 
@@ -136,6 +143,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  /**
+   * Erase the account for good: personal data first, then the sign-in itself.
+   *
+   * Firebase refuses to delete a user whose last sign-in is not recent. By
+   * then the personal data is already gone, which is the part that matters
+   * for an erasure request, so we report that clearly instead of rolling
+   * back — there is nothing to roll back to.
+   */
+  const deleteAccount = async (): Promise<AccountErasureReport> => {
+    setAuthError(null);
+    const current = auth.currentUser;
+    if (!current) throw new Error('You are not signed in.');
+
+    const report = await eraseAccountData(current.uid);
+
+    try {
+      await nativeSignOutIfNeeded();
+      await deleteUser(current);
+    } catch (err) {
+      const code = (err as { code?: string } | null)?.code;
+      if (code === 'auth/requires-recent-login') {
+        throw new Error(
+          'Your profile, photos and messages have been deleted. To remove the sign-in itself, sign in once more and delete again.'
+        );
+      }
+      throw err instanceof Error ? err : new Error('Could not delete the sign-in.');
+    }
+
+    return report;
+  };
+
   const signOut = async () => {
     setAuthError(null);
     try {
@@ -161,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signUpWithEmail,
         signInWithSocial,
         signOut,
+        deleteAccount,
         clearAuthError: () => setAuthError(null),
       }}
     >
