@@ -400,7 +400,7 @@ export function MatchesChatView({
       }
       return true;
     } catch (err) {
-      setChatError(err instanceof Error ? err.message : 'Encrypted voice note failed to send.');
+      setChatError(err instanceof Error ? err.message : 'Voice note failed to send.');
       return false;
     } finally {
       setSending(false);
